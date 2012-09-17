@@ -10,7 +10,7 @@ var express = require('express')
   , http = require('http')
   , path = require('path');
 
-var app = express();
+var app = module.exports = express();
 
 app.configure(function(){
   app.set('port', process.env.PORT || 3000);
@@ -34,6 +34,10 @@ app.configure('development', function(){
 
   // Allow connect-assets to access included libraries in development
   app.use(express.static  (path.join(__dirname, './')));
+});
+
+app.configure('test', function(){
+  app.set('port', 3001);
 });
 
 // Routes
