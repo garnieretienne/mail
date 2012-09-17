@@ -1,0 +1,1 @@
+Mail.Models.Message = Backbone.Model.extend({})

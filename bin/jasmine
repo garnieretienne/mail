@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+# Concatenate assets source files
+echo "Concatenate all applications coffee-script files..."
+./node_modules/.bin/packjs -w assets/javascripts -i assets/javascripts/application.coffee -o test/frontend/javascripts/ &> /dev/null &
+
+# Concatenate spec coffee files
+echo "Concatenate all coffee-script spec files..."
+./node_modules/.bin/packjs -w test/frontend/spec -i test/frontend/spec -o test/frontend/javascripts/ &> /dev/null &
+
+# Run Jasmine in the Chromium
+echo "Start Jasmine in Chromium..."
+file=file:///`pwd`/test/frontend/SpecRunner.html
+chromium-browser $file &

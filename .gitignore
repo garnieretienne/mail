@@ -1,0 +1,26 @@
+# Ignore javascript files compiled to test the application
+test/frontend/javascripts/*
+!test/frontend/javascripts/.gitme
+
+# Ignore built assets
+builtAssets/*
+
+# Ignore node dependencies for this app
+node_modules
+
+# General node components
+lib-cov
+*.seed
+*.log
+*.csv
+*.dat
+*.out
+*.pid
+*.gz
+pids
+logs
+results
+npm-debug.log
+
+
+
