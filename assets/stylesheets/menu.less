@@ -1,0 +1,31 @@
+#menu {
+  background-color: @grayDark;
+  color: @grayLighter;
+  height: 100%;
+  #mailbox-list {
+    padding: 1em;
+    ul {
+      margin-left: 1em;
+      list-style-type: none;
+      li {
+        cursor: pointer;
+        padding: 0.2em;
+        padding-left: 0.6em;
+        margin-bottom: 0.4em;
+        i {
+          margin-right: 1em;
+        }
+      }
+      li.current {
+        font-weight: bold;
+        text-decoration: underline; 
+      }
+      li:hover {
+        background-color: lighten(@grayDark, 10%);
+      }
+    }
+  }
+  #actions {
+    padding: 1em;
+  }
+}

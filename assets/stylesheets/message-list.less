@@ -1,0 +1,54 @@
+#message-list {
+  border-top: none;
+  height: 100%;
+  overflow-y: scroll;
+  .message-thumb {
+    cursor: pointer;
+    padding: 0.8em;
+    border-bottom: 1px solid @grayLighter;
+    .date {
+      display: block;
+      float: right;
+      font-size: 0.8em;
+      color: @gray;
+    }
+    .from {
+      margin-bottom: 0.2em;
+      min-height: 50px;
+      .from-avatar {
+        width: 48px;
+        display: block;
+        float: left;
+      }
+      .from-name {
+        margin-left: 50px;
+        padding-left: 1em;
+        font-weight: bold;
+      }
+      .from-email {
+        margin-left: 50px;
+        padding-left: 1em;
+        color: @gray;
+        font-style: italic;
+        font-size: 0.9em;
+      }
+    }
+    .subject {
+      margin-top: 0.6em;
+      font-weight: bolder;
+    }
+    .sample {
+      margin-bottom: 0;
+      color: @gray;
+      font-size: 0.9em;
+    }
+  }
+  .message-thumb.unread {
+    border-bottom: 1px solid @blue;
+    border-left: 6px solid @blue;
+    background-color: lighten(@blue, 50%);
+  }
+  .message-thumb:hover {
+    background-color: lighten(@gray, 50%);
+  }
+}

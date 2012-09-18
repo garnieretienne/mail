@@ -30,3 +30,13 @@
 # require ../../components/bootstrap/js/bootstrap-tooltip.js
 # require ../../components/bootstrap/js/bootstrap-transition.js
 # require ../../components/bootstrap/js/bootstrap-typeahead.js
+
+# Tmp
+# ===
+
+# Quick fix for temporary design
+$(document).ready ->
+  windowHeight = $('body').outerHeight(true)
+  headerHeight = $('#header').outerHeight(true)
+  height = windowHeight - headerHeight - 2
+  $('.fit-max-height').height height

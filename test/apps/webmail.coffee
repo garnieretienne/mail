@@ -22,5 +22,14 @@ describe 'Webmail', ->
           done()
 
       it 'has title', ->
-        console.log $('title').text();
         expect($('title').text()).to.equal 'Mail'
+      it 'has header', ->
+        expect($('#header').length).to.equal 1
+      it 'has menu', ->
+        expect($('#menu').length).to.equal 1
+        expect($('#menu #mailbox-list').length).to.equal 1
+        expect($('#menu #actions').length).to.equal 1
+      it 'has message list', ->
+        expect($('#message-list').length).to.equal 1
+      it 'has message area', ->
+        expect($('#message').length).to.equal 1
