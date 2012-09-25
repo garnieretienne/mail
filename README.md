@@ -1,3 +1,8 @@
+Warning
+=======
+
+This application is still a work in progress and is not ready for use yet.
+
 Directories
 ===========
 
@@ -14,14 +19,14 @@ Directories
 Note on Bower
 =============
 
-Bower: http://twitter.github.com/bower/
+* Bower: http://twitter.github.com/bower/
 
 Client side dependency libraries are managed using Twitter Bower to easily upgrade any component.
 
 Note on Assets
 ==============
 
-Connect-assets: https://github.com/TrevorBurnham/connect-assets
+* Connect-assets: https://github.com/TrevorBurnham/connect-assets
 
 Asset pipeline in this application is managed using 'connect-assets' middleware.
 
@@ -41,7 +46,7 @@ Testing
 Backbone
 --------
 
-Jasmine: http://pivotal.github.com/jasmine/
+* Jasmine: http://pivotal.github.com/jasmine/
 Jasmine 1.2.0 is installed manually (no auto-update).
 
 Test the backbone 'Mail' application using './bin/jasmine'. 
@@ -53,9 +58,9 @@ To add spec files, add coffee-script files into 'test/frontend/spec' and edit th
 Express
 -------
 
-Mocha: http://visionmedia.github.com/mocha/
-Chai: http://chaijs.com/
-Cheerio: https://github.com/MatthewMueller/cheerio#readme
+* Mocha: http://visionmedia.github.com/mocha/
+* Chai: http://chaijs.com/
+* Cheerio: https://github.com/MatthewMueller/cheerio#readme
 
 Express unit and browser testing are executed using Mocha test framework. Mocha can use any assertion library; this application uses Chai as it, and Cheerio as JQuery selector.
 

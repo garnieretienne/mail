@@ -2,10 +2,6 @@ extends ../../../views/layout
 
 block content
 
-  // Templates
-  script#message-thumb-template(type='text/template')
-    p Subject: <%= subject %>
-
   .container-fluid.max-height
     .row-fluid
       .span12
@@ -33,73 +29,7 @@ block content
 
       .span3.max-height
         #message-list
-          .message-thumb.unread
-            .date Mon Sep 17, 22:36
-            .from
-              img.img-rounded.from-avatar(src="https://twimg0-a.akamaihd.net/profile_images/1268005735/avatar_normal.jpg", alt="Etienne Garnier")
-              .from-name Etienne Garnier
-              .from-email garnier.etienne@gmail.com
-            .subject Welcome into Mail !
-            p.sample Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod...
-          .message-thumb.unread
-            .date Mon Sep 17, 22:36
-            .from
-              img.img-rounded.from-avatar(src="https://twimg0-a.akamaihd.net/profile_images/1268005735/avatar_normal.jpg", alt="Etienne Garnier")
-              .from-name Etienne Garnier
-              .from-email garnier.etienne@gmail.com
-            .subject Welcome into Mail !
-            p.sample Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod...
-          .message-thumb
-            .date Mon Sep 17, 22:36
-            .from
-              img.img-rounded.from-avatar(src="https://twimg0-a.akamaihd.net/profile_images/1268005735/avatar_normal.jpg", alt="Etienne Garnier")
-              .from-name Etienne Garnier
-              .from-email garnier.etienne@gmail.com
-            .subject Welcome into Mail !
-            p.sample Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod...
-          .message-thumb
-            .date Mon Sep 17, 22:36
-            .from
-              img.img-rounded.from-avatar(src="https://twimg0-a.akamaihd.net/profile_images/1268005735/avatar_normal.jpg", alt="Etienne Garnier")
-              .from-name Etienne Garnier
-              .from-email garnier.etienne@gmail.com
-            .subject Welcome into Mail !
-            p.sample Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod...
-          .message-thumb
-            .date Mon Sep 17, 22:36
-            .from
-              img.img-rounded.from-avatar(src="https://twimg0-a.akamaihd.net/profile_images/1268005735/avatar_normal.jpg", alt="Etienne Garnier")
-              .from-name Etienne Garnier
-              .from-email garnier.etienne@gmail.com
-            .subject Welcome into Mail !
-            p.sample Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod...
-          .message-thumb
-            .date Mon Sep 17, 22:36
-            .from
-              img.img-rounded.from-avatar(src="https://twimg0-a.akamaihd.net/profile_images/1268005735/avatar_normal.jpg", alt="Etienne Garnier")
-              .from-name Etienne Garnier
-              .from-email garnier.etienne@gmail.com
-            .subject Welcome into Mail !
-            p.sample Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod...
-          .message-thumb
-            .date Mon Sep 17, 22:36
-            .from
-              img.img-rounded.from-avatar(src="https://twimg0-a.akamaihd.net/profile_images/1268005735/avatar_normal.jpg", alt="Etienne Garnier")
-              .from-name Etienne Garnier
-              .from-email garnier.etienne@gmail.com
-            .subject Welcome into Mail !
-            p.sample Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod...
-          .message-thumb
-            .date Mon Sep 17, 22:36
-            .from
-              img.img-rounded.from-avatar(src="https://twimg0-a.akamaihd.net/profile_images/1268005735/avatar_normal.jpg", alt="Etienne Garnier")
-              .from-name Etienne Garnier
-              .from-email garnier.etienne@gmail.com
-            .subject Welcome into Mail !
-            p.sample Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod...
-
-
-
+          
       .span7.max-height
         #message
           .action-bar
@@ -125,5 +55,9 @@ block content
               img(src="http://cl.jroo.me/z3/I/t/I/d/a.aaa-Funny-horse-face.jpg", alt="an image")
               p Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum. Typi non habent claritatem insitam; est usus legentis in iis qui facit eorum claritatem. Investigationes demonstraverunt lectores legere me lius quod ii legunt saepius. Claritas est etiam processus dynamicus, qui sequitur mutationem consuetudium lectorum.   
 
+block javascript
 
-
+  // Init backbone app
+  script(type='text/javascript')
+    var webmailRouter = new Mail.Routers.Webmail();
+    Backbone.history.start();

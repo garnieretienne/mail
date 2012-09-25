@@ -3,3 +3,4 @@ window.Mail =
   Collections: {}
   Views: {}
   Routers: {}
+  Templates: {}
