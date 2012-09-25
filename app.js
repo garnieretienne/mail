@@ -8,9 +8,10 @@ require('coffee-script');
 
 var express = require('express')
   , http = require('http')
-  , path = require('path');
+  , path = require('path')
+  , socketIO = require('socket.io');
 
-var app = module.exports = express();
+var app = express();
 
 app.configure(function(){
   app.set('port', process.env.PORT || 3000);
@@ -40,10 +41,20 @@ app.configure('test', function(){
   app.set('port', 3001);
 });
 
+// Socket.io
+server = http.createServer(app);
+io = socketIO.listen(server);
+
 // Routes
-require('./apps/webmail/routes')(app);
+require('./apps/webmail/routes')(app, io);
 require('./apps/api/routes')(app);
 
-http.createServer(app).listen(app.get('port'), function(){
+// tmp
+io.sockets.on('connection', function(socket){
+  socket.emit('testing', "You are connected");
+});
+
+// App
+server.listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));
 });

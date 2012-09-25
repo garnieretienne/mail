@@ -57,7 +57,16 @@ block content
 
 block javascript
 
-  // Init backbone app
+  // Import socket.io
+  script(src='/socket.io/socket.io.js')
+
   script(type='text/javascript')
+    // Init socket.io    
+    var socket = io.connect('http://localhost');
+    socket.on('testing', function (data) {
+      console.log(data);
+    });
+
+    // Init backbone app
     var webmailRouter = new Mail.Routers.Webmail();
     Backbone.history.start();
