@@ -43,16 +43,16 @@ app.configure('test', function(){
 
 // Socket.io
 server = http.createServer(app);
-io = socketIO.listen(server);
+//io = socketIO.listen(server);
 
 // Routes
-require('./apps/webmail/routes')(app, io);
+require('./apps/webmail/routes')(app);
 require('./apps/api/routes')(app);
 
 // tmp
-io.sockets.on('connection', function(socket){
-  socket.emit('testing', "You are connected");
-});
+//io.sockets.on('connection', function(socket){
+//  socket.emit('testing', "You are connected");
+//});
 
 // App
 server.listen(app.get('port'), function(){
