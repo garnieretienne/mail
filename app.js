@@ -11,7 +11,8 @@ var express = require('express')
   , path = require('path')
   , socketIO = require('socket.io');
 
-var app = express();
+// Module.export is needed for testing
+var app = module.exports = express();
 
 app.configure(function(){
   app.set('port', process.env.PORT || 3000);

@@ -1,5 +1,3 @@
-express = require 'express'
-assert  = require 'assert'
 request = require 'request'
 app     = require '../../app'
 should  = require('chai').should()
