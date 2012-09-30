@@ -34,7 +34,10 @@ class Message
   # Generate a text sample from a text
   # Take the first 80 chars
   @generateSample: (text) ->
-    text.substring(0, 50)+'...'
+    if text.length > 50
+      return text.substring(0, 50)+'...'
+    else
+      return text
 
   # Generate a md5 hash from an email address
   @generateMD5Hash: (email) ->

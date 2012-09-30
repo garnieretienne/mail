@@ -13,16 +13,11 @@ routes = (app) ->
         password: 'imnotstrong'
       me = new Account tmpAxx
       me.on 'message:new', (message) ->
-        console.log message.subject
+        io.sockets.emit "message:new", message
       me.connect (err) ->
         console.log err if err
 
       res.render "#{__dirname}/views/index",
         title: 'Mail'
-
-    # Testing Socket
-    #app.get '/test/socket', (req, res) ->
-    #  io.sockets.emit "testing", "Hello Socket!"
-    #  res.send 200
 
 module.exports = routes

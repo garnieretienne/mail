@@ -44,10 +44,10 @@ app.configure('test', function(){
 
 // Socket.io
 server = http.createServer(app);
-//io = socketIO.listen(server);
+io = socketIO.listen(server);
 
 // Routes
-require('./apps/webmail/routes')(app);
+require('./apps/webmail/routes')(app, io);
 require('./apps/api/routes')(app);
 
 // tmp
