@@ -11,10 +11,12 @@ Directories
 * /bin           : Binaries for this app
 * /components    : Browser side libraries managed by Bower 
 * /docs          : Various documentations and RFCs
+* /lib           : Libraries used by models
 * /models        : Models used by Express
 * /public        : All assets not managed by the asset pipeline (ex: images)
 * /test/frontend : All Backbone application test files (managed by Jasmine)
 * /test/apps     : All Express application test files (managed by Mocha)
+* /test/lib      : All models libraries test files (managed by Mocha)
 * /test/models   : All Express models test files (managed by Mocha)
 * /views         : Express layouts
 
@@ -49,6 +51,7 @@ Backbone
 --------
 
 * Jasmine: http://pivotal.github.com/jasmine/
+
 Jasmine 1.2.0 is installed manually (no auto-update).
 
 Test the backbone 'Mail' application using './bin/jasmine'. 

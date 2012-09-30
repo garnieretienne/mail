@@ -1,5 +1,6 @@
-IMAP = require('../lib/imap')
 EventEmitter = require('events').EventEmitter
+IMAP = require('../lib/imap')
+Message = require './message'
 
 class Account
 
@@ -22,9 +23,9 @@ class Account
       port:     @imap.port
       secure:   @imap.tls
     imap = new IMAP()
-    imap.on 'message:new', (message) ->
-      # TODO: build a Message class and convert message to a Message Object
-      _this.emit 'message:new', message
+    imap.on 'message:new', (parsedMessage, imapFields) ->
+      Message.fromMailParser parsedMessage, imapFields, (message) ->
+        _this.emit 'message:new', message
     imap.connect imapSettings, (err, imapConnection) ->
       return callback(err) if err
       return callback(null)

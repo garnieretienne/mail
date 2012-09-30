@@ -22,10 +22,14 @@ describe 'IMAP', ->
 
   it 'should fetch messages using seqno', (done) ->
     imap = new IMAP()
-    imap.on 'message:new', (message) ->
-      expect(message.to[0].address).to.equal 'webmail.testing.dev@gmail.com'
+    imap.on 'message:new', (parsedMessage, imapFields) ->
+      expect(imapFields.seqno).to.equal 1
+      expect(imapFields.uid).to.equal 60
+      expect(imapFields.date).to.equal '12-May-2012 15:09:48 +0000'
+      expect(imapFields.flags[0]).to.equal 'Seen'
+      expect(parsedMessage.to[0].address).to.equal 'webmail.testing.dev@gmail.com'
     imap.connect this.imapSettings, (err, imapConnection) ->
       throw err if err
-      imap.fetchSeqno imapConnection, '1:10', (messages) ->
+      imap.fetchNewMessage imapConnection, '1', (messages) ->
         imapConnection.logout()
         done()

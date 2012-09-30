@@ -45,13 +45,13 @@ class IMAP
           else
             seqno = "#{messagesNumber+1}:#{messagesNumber+number}"
           messagesNumber = messagesNumber + number
-          _this.fetchSeqno imap, seqno
+          _this.fetchNewMessage imap, seqno
 
         return callback(null, imap)
 
-  # Fetch messages using seqno.
-  # Return a callback with an array of parsed messages.
-  fetchSeqno: (imap, seqno, callback) ->
+  # Fetch new messages using seqno.
+  # Emit an event "message:new".
+  fetchNewMessage: (imap, seqno, callback) ->
     _this = @
     fetch = imap.seq.fetch seqno,
       request:
@@ -62,11 +62,22 @@ class IMAP
       message.on "data", (data) ->
         mailparser.write(data.toString())
       mailparser.on "end", (parsedMessage) ->
-        _this.emit "message:new", parsedMessage
+        imapFields = 
+          seqno: message.seqno
+          uid: message.uid
+          date: message.date
+          flags: _this.formatFlags(message.flags)
+        _this.emit "message:new", parsedMessage, imapFields
       message.on "end", ->
         mailparser.end()
     fetch.on "end", ->
       return callback() if callback
+
+  # Format flags name
+  #   \\Seen => Seen
+  formatFlags: (flags) ->
+    flags.map (element, index, object) ->
+      element.substring(1) if element[0] == "\\"
 
 IMAP.prototype.__proto__ = EventEmitter.prototype;
 module.exports = IMAP
