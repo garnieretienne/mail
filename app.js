@@ -9,7 +9,8 @@ require('coffee-script');
 var express = require('express')
   , http = require('http')
   , path = require('path')
-  , socketIO = require('socket.io');
+  , socketIO = require('socket.io')
+  , RedisStore = require('connect-redis')(express);
 
 // Module.export is needed for testing
 var app = module.exports = express();
@@ -22,8 +23,14 @@ app.configure(function(){
   app.use(express.logger('dev'));
   app.use(express.bodyParser());
   app.use(express.methodOverride());
+  app.use(express.cookieParser('25c5f3e148c80d34de2c006699e87a7f'));
+  app.use(express.session({ 
+    store: new RedisStore(),
+    key: 'mail_session'
+  }));
   app.use(app.router);
   app.use(express.static  (path.join(__dirname, 'public')));
+
 
   // Enable rails style asset pipeline
   app.use(require('connect-assets')());
@@ -47,6 +54,7 @@ server = http.createServer(app);
 io = socketIO.listen(server);
 
 // Routes
+require('./apps/authentication/routes')(app);
 require('./apps/webmail/routes')(app, io);
 require('./apps/api/routes')(app);
 

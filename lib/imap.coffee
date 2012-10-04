@@ -19,6 +19,24 @@ MailParser = require("mailparser").MailParser
 #   imap.emit('logout'); // When you're finished
 class IMAP
 
+  # Authenticate an user using his email address
+  # TODO: Use provider class to get IMAP server configuration
+  @authenticate: (emailAddress, password, callback) ->
+    imapServer = 
+      server: 'imap.gmail.com'
+      port: 993
+      tls: true
+    imapSettings = 
+      username: emailAddress
+      password: password 
+      host: imapServer.server
+      port: imapServer.port
+      secure: imapServer.tls
+    imap = new ImapConnection imapSettings
+    imap.connect (err) ->
+      return callback(err, false) if err
+      return callback(null, true)
+
   # Connect an account, open the INBOX mailbox and listen for events
   # Return a callback with err and ImapConnection
   connect: (imapSettings, callback) ->

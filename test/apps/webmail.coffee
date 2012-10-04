@@ -9,14 +9,41 @@ describe 'Webmail', ->
 
   describe 'GET /', ->
 
-    describe 'show webmail user interface', ->
+    describe 'should redirect the user to /mail', ->
+      options = 
+        followRedirect: false
+        uri: "http://localhost:#{app.get('port')}/"
+      request options, (err, res, body) ->
+        expect(res.headers.location).to.equal "//localhost:#{app.get('port')}/mail"
+        expect(res.statusCode).to.equal 302
+
+  describe 'GET /mail', ->
+    
+    # Act as if the user was athenticated
+    authenticate = ->
+
+
+    describe '(non-authenticated) redirect the user to the login page', ->
+
+      it 'get the login page after redirection', ->
+        options = 
+          followRedirect: true
+          uri: "http://localhost:#{app.get('port')}/mail"
+        request options, (err, res, body) ->
+          $ = cheerio.load(body)
+          expect($('title')).to.equal 'Mail - Login'
+
+
+    describe '(authenticated) show webmail user interface', ->
       $ = null
 
       before (done) ->
+        authenticate
         options = 
-          uri: "http://localhost:#{app.get('port')}/"
+          followRedirect: false
+          uri: "http://localhost:#{app.get('port')}/mail"
         request options, (err, res, body) ->
-          $ = cheerio.load(body);
+          $ = cheerio.load(body)
           done()
 
       it 'has title', ->
@@ -31,3 +58,5 @@ describe 'Webmail', ->
         expect($('#message-list').length).to.equal 1
       it 'has message area', ->
         expect($('#message').length).to.equal 1
+      it 'has the username', ->
+        expect($('#user').text()).to.equal 'webmail.testing.dev@gmail.com'

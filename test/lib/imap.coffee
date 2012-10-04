@@ -33,3 +33,11 @@ describe 'IMAP', ->
       imap.fetchNewMessage imapConnection, '1', (messages) ->
         imapConnection.logout()
         done()
+
+  it 'should authenticate an user using his IMAP credentials', ->
+    IMAP.authenticate this.imapSettings.username, 'wrongpassword', (err, authenticated) ->
+      expect(err.message).to.equal 'Invalid credentials (Failure)'
+      expect(authenticated).to.be.false
+    IMAP.authenticate this.imapSettings.username, this.imapSettings.password, (err, authenticated) ->
+      expect(err).to.be.null
+      expect(authenticated).to.be.true
