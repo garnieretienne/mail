@@ -6,6 +6,29 @@ assert = require('chai').assert
 cheerio = require('cheerio')
 
 describe 'Webmail', ->
+  
+  # Disconnect the current user
+  disconnect = (callback) ->
+    options = 
+      followRedirect: false
+      uri: "http://localhost:#{app.get('port')}/sessions"
+    request.del options, (err, res, body) ->
+      callback()
+
+  # Act as if the user was athenticated
+  authenticate = (callback) ->
+    options = 
+      followRedirect: false
+      uri: "http://localhost:#{app.get('port')}/sessions"
+      form: 
+        username: 'webmail.testing.dev@gmail.com'
+        password: 'imnotstrong'
+    request.post options, (err, res, body) ->
+      cookie = res.request.headers.cookie
+      jar = request.jar()
+      cookie = request.cookie cookie
+      jar.add cookie
+      callback disconnect, jar
 
   describe 'GET /', ->
 
@@ -18,10 +41,6 @@ describe 'Webmail', ->
         expect(res.statusCode).to.equal 302
 
   describe 'GET /mail', ->
-    
-    # Act as if the user was athenticated
-    authenticate = ->
-
 
     describe '(non-authenticated) redirect the user to the login page', ->
 
@@ -31,20 +50,22 @@ describe 'Webmail', ->
           uri: "http://localhost:#{app.get('port')}/mail"
         request options, (err, res, body) ->
           $ = cheerio.load(body)
-          expect($('title')).to.equal 'Mail - Login'
+          expect($('title').text()).to.equal 'Mail - Login'
 
 
     describe '(authenticated) show webmail user interface', ->
       $ = null
 
       before (done) ->
-        authenticate
-        options = 
-          followRedirect: false
-          uri: "http://localhost:#{app.get('port')}/mail"
-        request options, (err, res, body) ->
-          $ = cheerio.load(body)
-          done()
+        authenticate (_disconnect, cookieJar) ->
+          options =
+            uri: "http://localhost:#{app.get('port')}/mail"
+            followRedirect: false
+            jar: cookieJar
+          request options, (err, res, body) ->
+            expect(res.statusCode).to.equal 200 # Connected
+            $ = cheerio.load(body)
+            _disconnect done
 
       it 'has title', ->
         expect($('title').text()).to.equal 'Mail'

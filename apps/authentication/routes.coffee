@@ -13,11 +13,16 @@ routes = (app) ->
     # TODO: add flash message with the given error
     IMAP.authenticate username, password, (err, authenticated) ->
       if authenticated
-        console.log 'authenticated!'
         req.session.currentUser = username
         res.redirect '/mail'
         return
-      console.log err.message
+      #console.log err
+      res.redirect '/login'
+
+  # TODO: add flash message with the given error
+  # TODO: end any socket connection and IMAP connections
+  app.del '/sessions', (req, res) ->
+    req.session.regenerate (err) ->
       res.redirect '/login'
 
 module.exports = routes

@@ -1,5 +1,3 @@
-#ImapConnection = require('imap').ImapConnection
-#MailParser = require("mailparser").MailParser
 Account = require '../../models/account'
 
 routes = (app) ->

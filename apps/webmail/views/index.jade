@@ -6,13 +6,19 @@ block content
     .row-fluid
       .span12
         #header
-          #logo
-            img(src="/images/stamp.png", alt="Stamp!")
-          h1 Mail
+          .row-fluid
+            .span10
+              #logo
+                img(src="/images/stamp.png", alt="Stamp!")
+              h1 Mail
+            .span2
+              #disconnect
+                button.btn.btn-primary Disconnect !
 
     .row-fluid.fit-max-height
       .span2.max-height
         #menu
+          #user= user
           #actions
             button.btn.btn-block.btn-primary 
               i.icon-envelope.icon-white
