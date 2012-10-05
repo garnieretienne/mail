@@ -8,7 +8,7 @@ cheerio = require('cheerio')
 describe 'Authentication', ->
 
   # Disconnect the current user
-  disconnect = (callback) ->
+  disconnect = (cookieJar, callback) ->
     options = 
       followRedirect: false
       uri: "http://localhost:#{app.get('port')}/sessions"
@@ -24,9 +24,8 @@ describe 'Authentication', ->
         username: 'webmail.testing.dev@gmail.com'
         password: 'imnotstrong'
     request.post options, (err, res, body) ->
-      cookie = res.request.headers.cookie
       jar = request.jar()
-      cookie = request.cookie cookie
+      cookie = request.cookie res.request.headers.cookie
       jar.add cookie
       callback disconnect, jar
 
@@ -60,7 +59,7 @@ describe 'Authentication', ->
             jar: cookieJar
           request options, (err, res, body) ->
             expect(res.statusCode).to.equal 200
-            _disconnect done
+            _disconnect cookieJar, done
 
       #TODO: buildCookieJar(res) and use it
       it 'should not authenticate the user', (done) ->
@@ -71,7 +70,11 @@ describe 'Authentication', ->
             username: 'webmail.testing.dev@gmail.com'
             password: 'wrongpassword'
         request.post options, (err, res, body) ->
+          jar = request.jar()
+          cookie = request.cookie res.request.headers.cookie
+          jar.add cookie
           options = 
+            jar: jar
             followRedirect: false
             uri: "http://localhost:#{app.get('port')}/mail"
           request options, (err, res, body) ->
@@ -82,9 +85,9 @@ describe 'Authentication', ->
       it 'should connect and disconnect the user', (done) ->
 
         authenticate (_disconnect, cookieJar) ->
-          request {uri: "http://localhost:#{app.get('port')}/mail", followRedirect: false}, (err, res, body) ->
+          request {uri: "http://localhost:#{app.get('port')}/mail", followRedirect: false, jar: cookieJar}, (err, res, body) ->
             expect(res.statusCode).to.equal 200 # Connected
-            _disconnect ->
-              request {uri: "http://localhost:#{app.get('port')}/mail", followRedirect: false}, (err, res, body) ->
+            _disconnect cookieJar, ->
+              request {uri: "http://localhost:#{app.get('port')}/mail", followRedirect: false, jar: cookieJar}, (err, res, body) ->
                 expect(res.statusCode).to.equal 302 # Disconnected
                 done()

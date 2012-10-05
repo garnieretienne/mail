@@ -8,7 +8,7 @@ cheerio = require('cheerio')
 describe 'Webmail', ->
   
   # Disconnect the current user
-  disconnect = (callback) ->
+  disconnect = (cookieJar, callback) ->
     options = 
       followRedirect: false
       uri: "http://localhost:#{app.get('port')}/sessions"
@@ -24,9 +24,8 @@ describe 'Webmail', ->
         username: 'webmail.testing.dev@gmail.com'
         password: 'imnotstrong'
     request.post options, (err, res, body) ->
-      cookie = res.request.headers.cookie
       jar = request.jar()
-      cookie = request.cookie cookie
+      cookie = request.cookie res.request.headers.cookie
       jar.add cookie
       callback disconnect, jar
 
@@ -65,7 +64,7 @@ describe 'Webmail', ->
           request options, (err, res, body) ->
             expect(res.statusCode).to.equal 200 # Connected
             $ = cheerio.load(body)
-            _disconnect done
+            _disconnect cookieJar, done
 
       it 'has title', ->
         expect($('title').text()).to.equal 'Mail'
