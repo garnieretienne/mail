@@ -11,9 +11,11 @@ routes = (app) ->
     password = req.body.password
 
     # TODO: add flash message with the given error
+    # TODO: protect password, no clear storage even in session ?
     IMAP.authenticate username, password, (err, authenticated) ->
       if authenticated
         req.session.currentUser = username
+        req.session.password    = password
         res.redirect '/mail'
         return
       #console.log err
@@ -23,6 +25,6 @@ routes = (app) ->
   # TODO: end any socket connection and IMAP connections
   app.del '/sessions', (req, res) ->
     req.session.regenerate (err) ->
-      res.redirect '/login'
+      res.send 200
 
 module.exports = routes

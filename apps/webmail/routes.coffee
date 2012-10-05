@@ -19,7 +19,9 @@ routes = (app) ->
     tmpAxx = 
       username: 'webmail.testing.dev@gmail.com',
       password: 'imnotstrong'
-    me = new Account tmpAxx
+    me = new Account
+      username: req.session.currentUser
+      password: req.session.password
     me.on 'message:new', (message) ->
       io.sockets.emit "message:new", message
     me.connect (err) ->

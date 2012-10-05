@@ -4,6 +4,11 @@ Mail.Routers.Webmail = Backbone.Router.extend
     '': 'home'
 
   initialize: ->
+    
+    # UI disconnect button
+    new Mail.Views.DisconnectButtonView
+      el: $('#disconnect')
+
     this.messages = new Mail.Collections.MessageList()
     this.messages.fetch()
 

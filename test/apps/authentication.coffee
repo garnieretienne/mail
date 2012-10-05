@@ -61,7 +61,6 @@ describe 'Authentication', ->
             expect(res.statusCode).to.equal 200
             _disconnect cookieJar, done
 
-      #TODO: buildCookieJar(res) and use it
       it 'should not authenticate the user', (done) ->
         options =
           followRedirect: false
@@ -81,7 +80,6 @@ describe 'Authentication', ->
             expect(res.statusCode).to.equal 302
             done()
 
-      #TODO: buildCookieJar(res) and use it
       it 'should connect and disconnect the user', (done) ->
 
         authenticate (_disconnect, cookieJar) ->
