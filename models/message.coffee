@@ -1,4 +1,5 @@
 crypto = require('crypto')
+riak = require('nodiak').getClient()
 
 class Message
 
@@ -27,6 +28,12 @@ class Message
       flags: imapFields.flags
     callback(message)
 
+  # Get a message from Riak database
+  @getByUID: (userId, uid, callback) ->
+    userBucket = riak.bucket userId
+    userBucket.objects.get uid, (err, obj) ->
+      return callback err, new Message(obj.data)
+
   # Parse header 'to' field from a message parsed using 'mailparser'
   @parseHeaderFieldTo: (toField) ->
     toField.map (element, index, object) -> element.address
@@ -51,5 +58,13 @@ class Message
   setDefaults: ->
     @from.md5 = Message.generateMD5Hash(@from.address) if not @from.md5
     @sample = Message.generateSample(@body.text) if not @sample
+
+  # Save a new message into Riak
+  # Save to the good userid
+  save: (userId, callback) ->
+    userBucket = riak.bucket userId
+    rObject = userBucket.object.new @uid, @
+    userBucket.objects.save rObject, (err, obj) ->
+      return callback(err) if callback
 
 module.exports = Message

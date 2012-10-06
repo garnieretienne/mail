@@ -16,14 +16,13 @@ routes = (app) ->
 
     # Connect to a test account and display any new message's 
     # subject in the server console
-    tmpAxx = 
-      username: 'webmail.testing.dev@gmail.com',
-      password: 'imnotstrong'
     me = new Account
       username: req.session.currentUser
       password: req.session.password
     me.on 'message:new', (message) ->
       io.sockets.emit "message:new", message
+      message.save req.session.currentUser, (err) ->
+        console.log err if err
     me.connect (err) ->
       console.log err if err
 

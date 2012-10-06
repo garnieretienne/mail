@@ -54,7 +54,6 @@ describe 'Message', ->
     message = new Message this.attr
     expect(message.sample).to.equal 'Lorem ipsum dolor sit amet, consectetur adipisicin...'
 
-
   it 'should import a parsed message (using mailparser) and create a new model from it', ->
     parsedMessage = { 
       html: "<p>#{this.loremIpsum}<p><br>\n",
@@ -104,5 +103,16 @@ describe 'Message', ->
       expect(message.date).to.equal 'Mon, 17 Sep 2012 09:16:06 GMT'
       expect(message.from.md5).to.equal 'fa381def9e677a8e7f672ec2eabfaf3a'
       expect(message.sample).to.equal 'Lorem ipsum dolor sit amet, consectetur adipisicin...'
+
+  it 'should save a message into database', (done)->
+    message = new Message this.attr
+    message.save 'testing@domain.tld', (err) ->
+      expect(err).to.be.null
+      Message.getByUID 'testing@domain.tld', message.uid, (err, gotMessage) ->
+        expect(err).to.be.null
+        expect(gotMessage.subject).to.equal message.subject
+        done()
+
+
 
 
