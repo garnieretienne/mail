@@ -19,9 +19,9 @@ class Account
     imapSettings =
       username: @username
       password: password
-      host:     @imap.server
+      host:     @imap.host
       port:     @imap.port
-      secure:   @imap.tls
+      secure:   @imap.secure
     imap = new IMAP()
     imap.on 'message:new', (parsedMessage, imapFields) ->
       Message.fromMailParser parsedMessage, imapFields, (message) ->
@@ -29,6 +29,11 @@ class Account
     imap.connect imapSettings, (err, imapConnection) ->
       return callback(err) if err
       return callback(null)
+
+  # Authenticate the account
+  authenticate: (callback) ->
+    IMAP.authenticate @imap, @username, password, (err, authenticated) ->
+      return callback(err, authenticated)
 
   constructor: (attributes) ->
     @username = attributes.username
@@ -39,9 +44,9 @@ class Account
   # TODO: use the Provider model, for now set with GMAIL parameters
   setProvider: ->
     @imap = 
-      server: 'imap.gmail.com'
+      host:   'localhost'
       port:   '993'
-      tls:    true
+      secure: true
 
 Account.prototype.__proto__ = EventEmitter.prototype;
 module.exports = Account

@@ -1,4 +1,4 @@
-IMAP = require '../../lib/imap'
+Account = require '../../models/account'
 
 routes = (app) ->
 
@@ -7,18 +7,18 @@ routes = (app) ->
       title: "Mail - Login"
 
   app.post '/sessions', (req, res) ->
-    username = req.body.username
-    password = req.body.password
 
     # TODO: add flash message with the given error
     # TODO: protect password, no clear storage even in session ?
-    IMAP.authenticate username, password, (err, authenticated) ->
+    account = new Account
+      username: req.body.username
+      password: req.body.password
+    account.authenticate (err, authenticated) ->
       if authenticated
-        req.session.currentUser = username
-        req.session.password    = password
+        req.session.currentUser = account.username
+        req.session.password    = account.password
         res.redirect '/mail'
         return
-      #console.log err
       res.redirect '/login'
 
   # TODO: add flash message with the given error

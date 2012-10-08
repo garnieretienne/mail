@@ -22,9 +22,9 @@ routes = (app) ->
     me.on 'message:new', (message) ->
       io.sockets.emit "message:new", message
       message.save req.session.currentUser, (err) ->
-        console.log err if err
+        #console.log "#{err}" if err
     me.connect (err) ->
-      console.log err if err
+      #console.log "Account.connect: #{err}" if err
 
     res.render "#{__dirname}/views/index",
       title: 'Mail'

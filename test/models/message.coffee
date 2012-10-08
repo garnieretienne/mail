@@ -1,3 +1,4 @@
+Testing = require '../_helper.js'
 should  = require('chai').should()
 expect = require('chai').expect
 assert = require('chai').assert

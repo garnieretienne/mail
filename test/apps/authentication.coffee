@@ -1,3 +1,4 @@
+Testing = require '../_helper.js'
 request = require 'request'
 app     = require '../../app'
 should  = require('chai').should()
@@ -12,6 +13,7 @@ describe 'Authentication', ->
     options = 
       followRedirect: false
       uri: "http://localhost:#{app.get('port')}/sessions"
+      jar: cookieJar
     request.del options, (err, res, body) ->
       callback()
 
@@ -21,11 +23,12 @@ describe 'Authentication', ->
       followRedirect: false
       uri: "http://localhost:#{app.get('port')}/sessions"
       form: 
-        username: 'webmail.testing.dev@gmail.com'
-        password: 'imnotstrong'
+        username: Testing.imapSettings.username
+        password: Testing.imapSettings.password
+      jar: request.jar()
     request.post options, (err, res, body) ->
       jar = request.jar()
-      cookie = request.cookie res.request.headers.cookie
+      cookie = request.cookie res.headers['set-cookie'][0]
       jar.add cookie
       callback disconnect, jar
 
@@ -42,7 +45,7 @@ describe 'Authentication', ->
           $ = cheerio.load(body);
           done()
 
-      it 'has an username and password fied', ->
+      it 'has an username and password field', ->
         expect($('input[name="username"]').attr('name')).to.equal 'username'
         expect($('input[name="password"]').attr('name')).to.equal 'password'
         expect($('input[type="submit"]')).to.not.be.null
@@ -66,11 +69,12 @@ describe 'Authentication', ->
           followRedirect: false
           uri: "http://localhost:#{app.get('port')}/sessions"
           form: 
-            username: 'webmail.testing.dev@gmail.com'
+            username: Testing.imapSettings.username
             password: 'wrongpassword'
+          jar: request.jar()
         request.post options, (err, res, body) ->
           jar = request.jar()
-          cookie = request.cookie res.request.headers.cookie
+          cookie = request.cookie res.headers['set-cookie'][0]
           jar.add cookie
           options = 
             jar: jar
@@ -80,7 +84,7 @@ describe 'Authentication', ->
             expect(res.statusCode).to.equal 302
             done()
 
-      it 'should connect and disconnect the user', (done) ->
+      it 'should authenticate and disconnect the user', (done) ->
 
         authenticate (_disconnect, cookieJar) ->
           request {uri: "http://localhost:#{app.get('port')}/mail", followRedirect: false, jar: cookieJar}, (err, res, body) ->
@@ -89,3 +93,4 @@ describe 'Authentication', ->
               request {uri: "http://localhost:#{app.get('port')}/mail", followRedirect: false, jar: cookieJar}, (err, res, body) ->
                 expect(res.statusCode).to.equal 302 # Disconnected
                 done()
+

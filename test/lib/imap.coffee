@@ -1,3 +1,4 @@
+Testing = require '../_helper.js'
 should  = require('chai').should()
 expect = require('chai').expect
 assert = require('chai').assert
@@ -6,12 +7,7 @@ IMAP = require '../../lib/imap'
 describe 'IMAP', ->
   
   before ->
-    this.imapSettings = 
-      username: 'webmail.testing.dev@gmail.com'
-      password: 'imnotstrong'
-      host:     'imap.gmail.com'
-      port:     993
-      secure:   true
+    this.imapSettings = Testing.imapSettings
 
   it 'should connect an IMAP account, select the INBOX and listen for events', (done) ->
     imap = new IMAP()
@@ -24,9 +20,8 @@ describe 'IMAP', ->
     imap = new IMAP()
     imap.on 'message:new', (parsedMessage, imapFields) ->
       expect(imapFields.seqno).to.equal 1
-      expect(imapFields.uid).to.equal 60
-      expect(imapFields.date).to.equal '12-May-2012 15:09:48 +0000'
-      expect(imapFields.flags[0]).to.equal 'Seen'
+      expect(imapFields.uid).to.equal 1
+      expect(imapFields.date).to.equal '08-Oct-2012 15:54:37 +0200'
       expect(parsedMessage.to[0].address).to.equal 'webmail.testing.dev@gmail.com'
     imap.connect this.imapSettings, (err, imapConnection) ->
       throw err if err
@@ -34,10 +29,25 @@ describe 'IMAP', ->
         imapConnection.logout()
         done()
 
-  it 'should authenticate an user using his IMAP credentials', ->
-    IMAP.authenticate this.imapSettings.username, 'wrongpassword', (err, authenticated) ->
-      expect(err.message).to.equal 'Invalid credentials (Failure)'
+  it 'should authenticate an user using his IMAP credentials', (done) ->
+    imapServer = 
+      host: this.imapSettings.host
+      port: this.imapSettings.port
+      secure: this.imapSettings.secure
+    IMAP.authenticate imapServer, this.imapSettings.username, 'wrongpassword', (err, authenticated) ->
+      expect(err.code).to.equal 'AUTHENTICATIONFAILED'
       expect(authenticated).to.be.false
-    IMAP.authenticate this.imapSettings.username, this.imapSettings.password, (err, authenticated) ->
+    IMAP.authenticate imapServer, this.imapSettings.username, this.imapSettings.password, (err, authenticated) ->
       expect(err).to.be.null
       expect(authenticated).to.be.true
+      done()
+
+  it 'should fetch headers and structure for a message range', (done) ->
+    imap = new IMAP()
+    imap.on 'fetchHeaders:data', (message) ->
+      expect(message.uid).to.be.not.null
+    imap.connect this.imapSettings, (err, imapConnection) ->
+      throw err if err
+      imap.fetchHeaders imapConnection, '1:10', ->
+        imapConnection.logout()
+        done()

@@ -21,17 +21,13 @@ class IMAP
 
   # Authenticate an user using his email address
   # TODO: Use provider class to get IMAP server configuration
-  @authenticate: (emailAddress, password, callback) ->
-    imapServer = 
-      server: 'imap.gmail.com'
-      port: 993
-      tls: true
+  @authenticate: (imapServer, emailAddress, password, callback) ->
     imapSettings = 
       username: emailAddress
       password: password 
-      host: imapServer.server
+      host: imapServer.host
       port: imapServer.port
-      secure: imapServer.tls
+      secure: imapServer.secure
     imap = new ImapConnection imapSettings
     imap.connect (err) ->
       return callback(err, false) if err
@@ -89,6 +85,20 @@ class IMAP
       message.on "end", ->
         mailparser.end()
     fetch.on "end", ->
+      return callback() if callback
+
+  # Fetch messages headers and structure using seqno.
+  # Emit an event "fetchHeaders:data".
+  fetchHeaders: (imap, seqno, callback) ->
+    _this = @
+    fetch = imap.seq.fetch seqno,
+      request:
+        structure: true
+        headers: true
+    fetch.on 'message', (message) ->
+      message.on 'end', ->
+        _this.emit 'fetchHeaders:data', message
+    fetch.on 'end', ->
       return callback() if callback
 
   # Format flags name

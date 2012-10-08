@@ -1,3 +1,4 @@
+Testing = require '../_helper.js'
 request = require 'request'
 app     = require '../../app'
 should  = require('chai').should()
@@ -12,6 +13,7 @@ describe 'Webmail', ->
     options = 
       followRedirect: false
       uri: "http://localhost:#{app.get('port')}/sessions"
+      jar: cookieJar
     request.del options, (err, res, body) ->
       callback()
 
@@ -21,11 +23,12 @@ describe 'Webmail', ->
       followRedirect: false
       uri: "http://localhost:#{app.get('port')}/sessions"
       form: 
-        username: 'webmail.testing.dev@gmail.com'
-        password: 'imnotstrong'
+        username: Testing.imapSettings.username
+        password: Testing.imapSettings.password
+      jar: request.jar()
     request.post options, (err, res, body) ->
       jar = request.jar()
-      cookie = request.cookie res.request.headers.cookie
+      cookie = request.cookie res.headers['set-cookie'][0]
       jar.add cookie
       callback disconnect, jar
 
