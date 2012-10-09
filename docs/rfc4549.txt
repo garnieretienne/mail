@@ -1,7 +1,7 @@
 Synchronization Operations for Disconnected IMAP4 Clients
 
 #  : 4549 (Draft)
-URL: http://www.ietf.org/rfc/rfc4549.txt
+URL: http://tools.ietf.org/html/rfc4549
 
 ------------------------------------------------------------------------
 
