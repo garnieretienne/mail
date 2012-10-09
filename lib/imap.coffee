@@ -1,6 +1,7 @@
 EventEmitter = require('events').EventEmitter
 ImapConnection = require('imap').ImapConnection
 MailParser = require("mailparser").MailParser
+Message = require '../models/message'
 
 # Manage IMAP stack for this application
 #   imap = new IMAP();
@@ -32,6 +33,12 @@ class IMAP
     imap.connect (err) ->
       return callback(err, false) if err
       return callback(null, true)
+
+  # Format flags name
+  #   \\Seen => Seen
+  @formatFlags: (flags) ->
+    flags.map (element, index, object) ->
+      element.substring(1) if element[0] == "\\"
 
   # Connect an account, open the INBOX mailbox and listen for events
   # Return a callback with err and ImapConnection
@@ -80,8 +87,9 @@ class IMAP
           seqno: message.seqno
           uid: message.uid
           date: message.date
-          flags: _this.formatFlags(message.flags)
-        _this.emit "message:new", parsedMessage, imapFields
+          flags: IMAP.formatFlags(message.flags)
+        Message.fromMailParser parsedMessage, imapFields, (message) ->
+          _this.emit "message:new", message
       message.on "end", ->
         mailparser.end()
     fetch.on "end", ->
@@ -100,12 +108,6 @@ class IMAP
         _this.emit 'fetchHeaders:data', message
     fetch.on 'end', ->
       return callback() if callback
-
-  # Format flags name
-  #   \\Seen => Seen
-  formatFlags: (flags) ->
-    flags.map (element, index, object) ->
-      element.substring(1) if element[0] == "\\"
 
 IMAP.prototype.__proto__ = EventEmitter.prototype;
 module.exports = IMAP
