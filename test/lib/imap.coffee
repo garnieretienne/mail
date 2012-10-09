@@ -45,7 +45,7 @@ describe 'IMAP', ->
   it 'should fetch headers and structure for a message range', (done) ->
     imap = new IMAP()
     imap.on 'fetchHeaders:data', (message) ->
-      console.log message
+      expect(message.to[0]).to.equal 'webmail.testing.dev@gmail.com'
       expect(message.uid).to.be.not.null
     imap.connect this.imapSettings, (err, imapConnection) ->
       throw err if err

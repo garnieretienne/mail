@@ -1,6 +1,7 @@
 crypto = require('crypto')
 riak = require('nodiak').getClient()
-IMAP = require '../lib/imap'
+mimelib = require('mimelib')
+
 
 class Message
 
@@ -39,7 +40,7 @@ class Message
         address: Message.parseImapMessageHeaderFieldFrom(imapMessage.headers.from[0], 'address'),
       to: imapMessage.headers.to,
       date: imapMessage.date,
-      flags: IMAP.formatFlags(imapMessage.flags)
+      flags: imapMessage.flags
       parts: Message.mapPartIDs(imapMessage.structure)
     callback(message)
 
@@ -56,9 +57,11 @@ class Message
   # Parse header field 'from' from an ImapMessage field
   @parseImapMessageHeaderFieldFrom: (fromField, element) ->
     if element == 'name'
-      return fromField.match(/"(.*)"/)[1]
+      matchResult = fromField.match(/(.*) </)
+      return mimelib.decodeMimeWord(matchResult[1]) if matchResult 
     if element == 'address'
-      return fromField.match(/<(.*)>/)[1]
+      matchResult = fromField.match(/<(.*)>/)
+      return matchResult[1]
     return ''
 
   # Analyze message structure returned by node-imap to find the 'text' type content.

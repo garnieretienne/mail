@@ -34,12 +34,6 @@ class IMAP
       return callback(err, false) if err
       return callback(null, true)
 
-  # Format flags name
-  #   \\Seen => Seen
-  @formatFlags: (flags) ->
-    flags.map (element, index, object) ->
-      element.substring(1) if element[0] == "\\"
-
   # Connect an account, open the INBOX mailbox and listen for events
   # Return a callback with err and ImapConnection
   connect: (imapSettings, callback) ->
@@ -72,6 +66,7 @@ class IMAP
 
   # Fetch new messages using seqno.
   # Emit an event "message:new".
+  # TODO: REWRITE THIS
   fetchNewMessage: (imap, seqno, callback) ->
     _this = @
     fetch = imap.seq.fetch seqno,
@@ -87,7 +82,7 @@ class IMAP
           seqno: message.seqno
           uid: message.uid
           date: message.date
-          flags: IMAP.formatFlags(message.flags)
+          flags: message.flags
         Message.fromMailParser parsedMessage, imapFields, (message) ->
           _this.emit "message:new", message
       message.on "end", ->
@@ -105,7 +100,8 @@ class IMAP
         headers: true
     fetch.on 'message', (message) ->
       message.on 'end', ->
-        _this.emit 'fetchHeaders:data', message
+        Message.fromImapMessage message, (message) ->
+          _this.emit 'fetchHeaders:data', message
     fetch.on 'end', ->
       return callback() if callback
 

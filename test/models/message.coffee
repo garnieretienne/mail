@@ -131,7 +131,7 @@ describe 'Message', ->
         'received-spf': [ 'neutral (google.com: 64.15.252.10 is neither permitted nor denied by best guess record for domain of ecommerce@reuters.com) client-ip=64.15.252.10;' ],
         'authentication-results': [ 'mx.google.com; spf=neutral (google.com: 64.15.252.10 is neither permitted nor denied by best guess record for domain of ecommerce@reuters.com) smtp.mail=ecommerce@reuters.com' ],
         date: [ 'Mon, 8 Oct 2012 13:08:34 +0000 (UTC)' ],
-        from: [ '"Reuters.com" <ecommerce@reuters.com>' ],
+        from: [ 'Reuters.com <ecommerce@reuters.com>' ],
         to: [ 'webmail.testing.dev@gmail.com' ],
         'message-id': [ '<677692338.260391349701714451.JavaMail.tomcat@S264630NJ2XCM07>' ],
         subject: [ 'Welcome to Reuters.com' ],
@@ -167,7 +167,7 @@ describe 'Message', ->
       expect(message.to[0]).to.equal 'webmail.testing.dev@gmail.com'
       expect(message.seqno).to.equal 10
       expect(message.uid).to.equal 10
-      expect(message.flags[0]).to.equal 'Seen'
+      expect(message.flags[0]).to.equal '\\Seen'
       expect(message.date).to.equal '08-Oct-2012 15:54:41 +0200'
       expect(message.from.md5).to.equal 'ef9766f56c62aac51acfeba434b8d766'
       expect(message.parts['text/plain']).to.equal undefined

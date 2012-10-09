@@ -15,7 +15,8 @@
     "imap": "~0.5.2",
     "mailparser": "~0.2.30",
     "connect-redis": "~1.4.4",
-    "nodiak": "0.0.7"
+    "nodiak": "0.0.7",
+    "mimelib": "~0.2.7"
   },
   "devDependencies": {
     "packjs": "0.0.6",
