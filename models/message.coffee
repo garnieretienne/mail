@@ -34,7 +34,7 @@ class Message
     message = new Message
       seqno: imapMessage.seqno
       uid: imapMessage.uid,
-      subject: imapMessage.headers.subject[0],
+      subject: mimelib.decodeMimeWord(imapMessage.headers.subject[0]),
       from:
         name: Message.parseImapMessageHeaderFieldFrom(imapMessage.headers.from[0], 'name'),
         address: Message.parseImapMessageHeaderFieldFrom(imapMessage.headers.from[0], 'address'),

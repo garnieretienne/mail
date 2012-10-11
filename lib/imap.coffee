@@ -62,7 +62,7 @@ class IMAP
           messagesNumber = messagesNumber + number
           _this.fetchNewMessage imap, seqno
 
-        return callback(null, imap)
+        return callback(null, imap, box)
 
   # Fetch new messages using seqno.
   # Emit an event "message:new".

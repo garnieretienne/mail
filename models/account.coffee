@@ -25,9 +25,39 @@ class Account
     imap = new IMAP()
     imap.on 'message:new', (message) ->
       _this.emit 'message:new', message
-    imap.connect imapSettings, (err, imapConnection) ->
-      return callback(err) if err
-      return callback(null)
+    imap.connect imapSettings, (err, imapConnection, box) ->
+      return callback(err, null, null) if err
+      return callback(null, imap, imapConnection, box)
+
+  # TODO: chose mailbox. For now, mailbox is given by the box object
+  synchronize: (imap, imapConnection, box, settings, callback) ->
+    _this = @
+
+    mailbox         = settings.mailbox || 'INBOX' # unused
+    type            = settings.type || 'partial'
+    maxSeqno        = box.messages.total
+    
+    # Segment the fetch
+    messagePerRange = 10
+    rangeNumber     = Math.floor(maxSeqno / messagePerRange)
+    ranges = []
+    index = 1
+    if maxSeqno > messagePerRange
+      for i in [1..rangeNumber]
+        ranges.push "#{index}:#{messagePerRange*i}"
+        index = (messagePerRange*i) + 1
+    ranges.push "#{index}:*"
+
+    # Fetch and cache the headers
+    # TODO: better asynchronous iteration patterns
+    imap.on 'fetchHeaders:data', (message) ->
+      message.save _this.username, (err) ->
+        _this.emit 'message:new', message if !err
+    for range in ranges
+      imap.fetchHeaders imapConnection, range, ->
+        # Return callback only after the last range
+        return callback() if callback && range == ranges[ranges.length-1] 
+    
 
   # Authenticate the account
   authenticate: (callback) ->

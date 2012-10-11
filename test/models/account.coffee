@@ -26,3 +26,20 @@ describe 'Account', ->
       expect(err).to.be.null
       expect(authenticated).to.be.true
       done()
+
+  # TODO: full, partial (new + old), new, old
+  it 'should fully synchronize the account', (done) ->
+    _this = this.account
+    total = 0
+    
+    this.account.on 'message:new', (message) ->
+      expect(message.seqno).to.be.below total+1
+
+    this.account.connect (err, imap, imapConnection, box) ->
+      throw err if err
+      total = box.messages.total
+      settings = 
+        mailbox: 'INBOX'
+        type:    'full'
+      _this.synchronize imap, imapConnection, box, settings, ->
+        done()
