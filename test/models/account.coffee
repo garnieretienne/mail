@@ -27,7 +27,6 @@ describe 'Account', ->
       expect(authenticated).to.be.true
       done()
 
-  # TODO: full, partial (new + old), new, old
   it 'should fully synchronize the account', (done) ->
     _this = this.account
     total = 0
@@ -35,11 +34,25 @@ describe 'Account', ->
     this.account.on 'message:new', (message) ->
       expect(message.seqno).to.be.below total+1
 
-    this.account.connect (err, imap, imapConnection, box) ->
+    this.account.connect (err) ->
       throw err if err
-      total = box.messages.total
-      settings = 
-        mailbox: 'INBOX'
-        type:    'full'
-      _this.synchronize imap, imapConnection, box, settings, ->
+      _this.select 'INBOX', (err, mailbox) ->
+        throw err if err
+        total = _this.mailbox.messages.total
+        settings = 
+          type: 'full'
+        sync = _this.synchronize settings
+        sync.on 'error', (error) ->
+          throw err if err
+        sync.on 'end', ->
+          done()
+
+  it 'should disconnect the account', (done) ->
+    account = this.account
+    account.connect (err) ->
+      throw err if err
+      account.disconnect ->
+        requests  = account.imap.imap._state.requests
+        lastIndex = requests.length - 1
+        expect(requests[lastIndex].cmd).to.equal 'LOGOUT'
         done()

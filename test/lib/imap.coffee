@@ -9,12 +9,29 @@ describe 'IMAP', ->
   before ->
     this.imapSettings = Testing.imapSettings
 
-  it 'should connect an IMAP account, select the INBOX and listen for events', (done) ->
+  it 'should connect an IMAP account', (done) ->
     imap = new IMAP this.imapSettings
     imap.connect (err) ->
       throw err if err
-      #imapConnection.logout() if imapConnection
+      imap.emit 'logout'
       done()
+
+  it 'should logout from an IMAP account', (done) ->
+    imap = new IMAP this.imapSettings
+    imap.connect (err) ->
+      throw err if err
+      imap.emit 'logout', ->
+        expect(imap.imap._state.requests[0].cmd).to.equal 'LOGOUT'
+        done()
+
+  it 'should open the INBOX mailbox after connected', (done) ->
+    imap = new IMAP this.imapSettings
+    imap.connect (err) ->
+      imap.open 'INBOX', (err, box) ->
+        throw err if err
+        expect(box.name).to.equal 'INBOX'
+        imap.emit 'logout'
+        done()
 
   # Need for authenticated? Authenticate if no error ?
   it 'should authenticate an user using his IMAP credentials', (done) ->
@@ -38,6 +55,8 @@ describe 'IMAP', ->
       expect(message.uid).to.be.not.null
     imap.connect (err) ->
       throw err if err
-      imap.fetchHeaders '1:10', ->
-        #imapConnection.logout()
-        done()
+      imap.open 'INBOX', (err) ->
+        throw err if err
+        imap.fetchHeaders '1:10', ->
+          imap.emit 'logout'
+          done()

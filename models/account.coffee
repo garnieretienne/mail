@@ -2,40 +2,57 @@ EventEmitter = require('events').EventEmitter
 IMAP = require('../lib/imap')
 Message = require './message'
 
+# TODO: imap logout, = Account / disconnect
 class Account
 
   # Password must be a private attribute
   password = ''
 
-  # Connect to the imap server and open the 'INBOX' mailbox
-  # Events for:
-  #  - new message (message:new)
-  #  - TODO: message deleted
-  #  - TODO: message flag updated
-  #  - TODO: server alert
-  # TODO: manage disconnect using event
+  # Connect to the imap server
   connect: (callback) ->
     _this = @
-    imapSettings =
+    imap = new IMAP 
       username: @username
       password: password
       host:     @imap.host
       port:     @imap.port
       secure:   @imap.secure
-    imap = new IMAP()
-    imap.on 'message:new', (message) ->
+    @imap = imap
+    @imap.on 'message:new', (message) ->
       _this.emit 'message:new', message
-    imap.connect imapSettings, (err, imapConnection, box) ->
-      return callback(err, null, null) if err
-      return callback(null, imap, imapConnection, box)
+    @imap.connect (err) ->
+      return callback(err) if err
+      return callback(null)
 
-  # TODO: chose mailbox. For now, mailbox is given by the box object
-  synchronize: (imap, imapConnection, box, settings, callback) ->
+  # Disconnect from the imap server
+  disconnect: (callback) ->
+    @imap.emit 'logout'
+    return callback() if callback
+
+  # Select a mailbox for futher actions
+  # TODO: partial sync on select
+  # TODO: events
+  # TODO: mailbox object
+  select: (mailbox, callback) ->
     _this = @
+    @imap.open mailbox, (err, box) ->
+      _this.mailbox = box # tmp
+      return callback(err)
 
-    mailbox         = settings.mailbox || 'INBOX' # unused
-    type            = settings.type || 'partial'
-    maxSeqno        = box.messages.total
+  # Synchronize the selected mailbox.
+  # Type:
+  #  - partial
+  #  - full
+  # Events: 
+  #  - error: append when an error append on message fetch
+  #  - end  : append when the synchronization is done
+  # TODO: full, partial (new + old), new, old
+  synchronize: (settings, callback) ->
+    _this = @
+    type       = settings.type || 'partial'
+    maxSeqno   = @mailbox.messages.total
+    processed  = 0
+    fetchEvents = new EventEmitter()
     
     # Segment the fetch
     messagePerRange = 10
@@ -48,16 +65,24 @@ class Account
         index = (messagePerRange*i) + 1
     ranges.push "#{index}:*"
 
-    # Fetch and cache the headers
-    # TODO: better asynchronous iteration patterns
-    imap.on 'fetchHeaders:data', (message) ->
+    # Fetch and cache the headers using range
+    # When a message is fetched, 
+    # save it in the database and
+    # emit a 'new message' event.
+    @imap.on 'fetchHeaders:data', (message) ->
       message.save _this.username, (err) ->
-        _this.emit 'message:new', message if !err
-    for range in ranges
-      imap.fetchHeaders imapConnection, range, ->
-        # Return callback only after the last range
-        return callback() if callback && range == ranges[ranges.length-1] 
-    
+        fetchEvents.emit('error', err) if err
+        _this.emit 'message:new', message
+        processed = processed + 1
+        if processed == maxSeqno
+          fetchEvents.emit('end') 
+
+    # Using nextTick to be able to listen for events.
+    # http://howtonode.org/understanding-process-next-tick
+    process.nextTick ->
+     for range in ranges
+        _this.imap.fetchHeaders range
+    return fetchEvents
 
   # Authenticate the account
   authenticate: (callback) ->
