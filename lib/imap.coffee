@@ -1,23 +1,7 @@
 EventEmitter = require('events').EventEmitter
 ImapConnection = require('imap').ImapConnection
 MailParser = require("mailparser").MailParser
-Message = require '../models/message'
 
-# Manage IMAP stack for this application
-#   imap = new IMAP();
-#   imap.on('new:message', function(message){
-#     // process...
-#   });
-#   imap.connect(imapSettings, function(err, imapConnection) {
-#     if (err) {
-#       throw(err);
-#     }
-#     imap.on('logout', function(){
-#       imapConnection.logout();
-#     });
-#   });
-#   
-#   imap.emit('logout'); // When you're finished
 class IMAP
 
   # Authenticate an user using his email address
@@ -37,8 +21,8 @@ class IMAP
   constructor: (imapSettings) ->
     @imapSettings = imapSettings
 
-  # Connect an account, open the INBOX mailbox and listen for events
-  # Return a callback with err and ImapConnection
+  # Connect an account
+  # Return a callback with errors
   connect: (callback) ->
     _this = @
     imap = new ImapConnection @imapSettings
@@ -89,8 +73,7 @@ class IMAP
         headers: true
     fetch.on 'message', (message) ->
       message.on 'end', ->
-        Message.fromImapMessage message, (message) ->
-          _this.emit 'fetchHeaders:data', message
+        _this.emit 'fetchHeaders:data', message
     fetch.on 'end', ->
       return callback() if callback
 

@@ -21,7 +21,7 @@ describe 'Account', ->
     expect(this.account.imap.secure).to.be.true
     this.account.connect done
 
-  it "should try to authenticate the account withe the given credentials", (done) ->
+  it "should try to authenticate the account with given credentials", (done) ->
     this.account.authenticate (err, authenticated) ->
       expect(err).to.be.null
       expect(authenticated).to.be.true

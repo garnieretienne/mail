@@ -69,13 +69,14 @@ class Account
     # When a message is fetched, 
     # save it in the database and
     # emit a 'new message' event.
-    @imap.on 'fetchHeaders:data', (message) ->
-      message.save _this.username, (err) ->
-        fetchEvents.emit('error', err) if err
-        _this.emit 'message:new', message
-        processed = processed + 1
-        if processed == maxSeqno
-          fetchEvents.emit('end') 
+    @imap.on 'fetchHeaders:data', (imapMessage) ->
+      Message.fromImapMessage imapMessage, (message) ->
+        message.save _this.username, (err) ->
+          fetchEvents.emit('error', err) if err
+          _this.emit 'message:new', message
+          processed = processed + 1
+          if processed == maxSeqno
+            fetchEvents.emit('end') 
 
     # Using nextTick to be able to listen for events.
     # http://howtonode.org/understanding-process-next-tick
