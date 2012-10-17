@@ -1,6 +1,7 @@
 EventEmitter = require('events').EventEmitter
 IMAP = require('../lib/imap')
 Message = require './message'
+Mailbox = require './mailbox'
 
 # TODO: imap logout, = Account / disconnect
 class Account
@@ -36,7 +37,12 @@ class Account
   select: (mailbox, callback) ->
     _this = @
     @imap.open mailbox, (err, box) ->
-      _this.mailbox = box # tmp
+      _this.mailbox = new Mailbox
+        name:        box.name
+        uidvalidity: box.uidvalidity
+        messages:
+          total:     box.messages.total
+          unread:    box.messages.unseen
       return callback(err)
 
   # Synchronize the selected mailbox.
