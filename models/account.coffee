@@ -2,6 +2,7 @@ EventEmitter = require('events').EventEmitter
 IMAP = require('../lib/imap')
 Message = require './message'
 Mailbox = require './mailbox'
+Provider = require './provider'
 
 # TODO: imap logout, = Account / disconnect
 class Account
@@ -9,16 +10,21 @@ class Account
   # Password must be a private attribute
   password = ''
 
+  constructor: (attributes) ->
+    @username = attributes.username
+    password = attributes.password
+
   # Connect to the imap server
   connect: (callback) ->
+    if !@imap || !@smtp
+      return callback(new Error('No provider set!'))
     _this = @
-    imap = new IMAP 
+    @imap = new IMAP 
       username: @username
       password: password
       host:     @imap.host
       port:     @imap.port
       secure:   @imap.secure
-    @imap = imap
     @imap.on 'message:new', (message) ->
       _this.emit 'message:new', message
     @imap.connect (err) ->
@@ -96,18 +102,15 @@ class Account
     IMAP.authenticate @imap, @username, password, (err, authenticated) ->
       return callback(err, authenticated)
 
-  constructor: (attributes) ->
-    @username = attributes.username
-    password = attributes.password
-    @setProvider()
-
-  # Find the address provider
-  # TODO: use the Provider model, for now set with GMAIL parameters
-  setProvider: ->
-    @imap = 
-      host:   'localhost'
-      port:   '993'
-      secure: true
+  # Find the email address provider
+  findProvider: (callback) ->
+    _this = @
+    Provider.search @username, (err, provider) ->
+      if provider.name
+        _this.imap = provider.imap
+        _this.smtp = provider.smtp
+        return callback(true)
+      return callback(false)
 
 Account.prototype.__proto__ = EventEmitter.prototype;
 module.exports = Account

@@ -13,13 +13,18 @@ routes = (app) ->
     account = new Account
       username: req.body.username
       password: req.body.password
-    account.authenticate (err, authenticated) ->
-      if authenticated
-        req.session.currentUser = account.username
-        req.session.password    = account.password
-        res.redirect '/mail'
-        return
-      res.redirect '/login'
+    account.findProvider (found) ->
+      if found
+        account.authenticate (err, authenticated) ->
+          if authenticated
+            req.session.currentUser = account.username
+            req.session.password    = account.password
+            res.redirect '/mail'
+            return
+          res.redirect '/login'
+          return
+      else
+        res.redirect '/login'
 
   # TODO: add flash message with the given error
   # TODO: end any socket connection and IMAP connections

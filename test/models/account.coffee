@@ -6,10 +6,12 @@ Account = require '../../models/account'
 
 describe 'Account', ->
 
-  before ->
+  before (done) ->
     this.account = new Account
       username: Testing.imapSettings.username
       password: Testing.imapSettings.password
+    this.account.findProvider =>
+      done()
 
   it 'should retrive the username but not the password', ->
     expect(this.account.username).to.equal 'webmail.testing.dev@gmail.com'
@@ -17,7 +19,7 @@ describe 'Account', ->
 
   it 'should connect the account INBOX', (done) ->
     expect(this.account.imap.host).to.equal 'localhost'
-    expect(this.account.imap.port).to.equal '993'
+    expect(this.account.imap.port).to.equal 993
     expect(this.account.imap.secure).to.be.true
     this.account.connect done
 

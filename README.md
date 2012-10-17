@@ -44,6 +44,28 @@ To override a Bootstrap variable value, create a less file with the same name th
 
 Exemple: To override a variable value in the 'variables.less' Bootstrap file, create a 'variables-override.less' file into 'assets/stylesheets/' with your overrided value in it, and add an import line into the 'application.less' file, just under the original file.
 
+Note on Riak
+============
+
+To search in the database for providers, riak need to support search and auto-indexing of the 'providers' bucket.
+More informations: http://docs.basho.com/riak/latest/cookbooks/Riak-Search---Indexing-and-Querying-Riak-KV-Data/
+
+* Enable search in /etc/app.config:
+
+```
+%% Riak Search Config
+ {riak_search, [
+                %% To enable Search functionality set this 'true'.
+                {enabled, true}
+               ]},
+```
+
+* Set up indexing on the providers bucket
+
+```
+search-cmd install providers
+```
+
 Testing
 =======
 
