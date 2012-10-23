@@ -18,7 +18,7 @@ routes = (app) ->
         account.authenticate (err, authenticated) ->
           if authenticated
             req.session.currentUser = account.username
-            req.session.password    = account.password
+            req.session.password    = req.body.password
             res.redirect '/mail'
             return
           res.redirect '/login'

@@ -6,5 +6,4 @@ Mail.Templates.messageThumbTemplate = '
     <div class="from-email"><%= from.address %></div>
   </div>
   <div class="subject"><%= subject %></div>
-  <p class="sample"><%= sample %></p>
 '

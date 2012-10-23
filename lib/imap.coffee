@@ -15,6 +15,7 @@ class IMAP
       secure: imapServer.secure
     imap = new ImapConnection imapSettings
     imap.connect (err) ->
+      imap.logout()
       return callback(err, false) if err
       return callback(null, true)
 

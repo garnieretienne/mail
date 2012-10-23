@@ -14,17 +14,31 @@ routes = (app) ->
 
   app.get '/mail', (req, res) ->
 
-    # Connect to a test account and display any new message's 
-    # subject in the server console
-    me = new Account
+    # Create the account with user validated credentials
+    account = new Account
       username: req.session.currentUser
       password: req.session.password
-    me.on 'message:new', (message) ->
+
+    # Events
+    account.on 'message:new', (message) ->
       io.sockets.emit "message:new", message
-      message.save req.session.currentUser, (err) ->
-        #console.log "#{err}" if err
-    me.connect (err) ->
-      #console.log "Account.connect: #{err}" if err
+
+    # Get the account provider informations
+    account.findProvider ->
+
+      # Connect to the IMAP server
+      account.connect (err) ->
+        throw err if err
+
+        # Open the INBOX
+        account.select 'INBOX', (err, mailbox) ->
+          throw err if err
+
+          # Synchronize the INBOX
+          sync = account.synchronize
+            type: 'full'
+          sync.on 'error', (err) ->
+            throw err if err
 
     res.render "#{__dirname}/views/index",
       title: 'Mail'

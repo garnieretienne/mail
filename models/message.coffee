@@ -20,7 +20,7 @@ class Message
     message = new Message
       seqno: imapFields.seqno,
       uid: imapFields.uid,
-      subject: parsedMessage.subject,
+      subject: mimelib.parseMimeWords(parsedMessage.subject),
       from:
         name: parsedMessage.from[0].name,
         address: parsedMessage.from[0].address,
@@ -38,7 +38,7 @@ class Message
     message = new Message
       seqno: imapMessage.seqno
       uid: imapMessage.uid,
-      subject: mimelib.decodeMimeWord(imapMessage.headers.subject[0]),
+      subject: mimelib.parseMimeWords(imapMessage.headers.subject[0]),
       from:
         name: Message.parseImapMessageHeaderFieldFrom(imapMessage.headers.from[0], 'name'),
         address: Message.parseImapMessageHeaderFieldFrom(imapMessage.headers.from[0], 'address'),
@@ -48,24 +48,42 @@ class Message
       parts: Message.mapPartIDs(imapMessage.structure)
     callback(message)
 
-  # Get a message from Riak database
-  @getByUID: (userId, uid, callback) ->
-    userBucket = riak.bucket userId
+  # Get a message from Riak database using the UID
+  @getByUID: (userId, mailboxName, uid, callback) ->
+    userBucket = riak.bucket "#{userId}:#{mailboxName}"
     userBucket.objects.get uid, (err, obj) ->
       return callback err, new Message(obj.data)
+
+  # Get a message from the Riak database usng the sequence number
+  @getBySeqno: (userId, mailboxName, seqno, callback) ->
+    userBucket = riak.bucket "#{userId}:#{mailboxName}"
+    keys = []
+    userBucket.search.twoi seqno, 'seqno', (err, key) ->
+      return callback(err, null) if err or key.length == 0
+      Message.getByUID userId, mailboxName, key, (err, message) ->
+        return callback(err, message)
+
+  # Get all messages for the given user in the given mailbox
+  @all: (userId, mailboxName, callback) ->
+    userBucket = riak.bucket "#{userId}:#{mailboxName}"
 
   # Parse header field 'to' from a message parsed using 'mailparser'
   @parseMailParserHeaderFieldTo: (toField) ->
     toField.map (element, index, object) -> element.address
 
   # Parse header field 'from' from an ImapMessage field
+  # TODO: better support for 
+  #  - "MR TOTO <toto@toto.com>"
+  #  - "toto@toto.com"
   @parseImapMessageHeaderFieldFrom: (fromField, element) ->
     if element == 'name'
       matchResult = fromField.match(/(.*) </)
-      return mimelib.decodeMimeWord(matchResult[1]) if matchResult 
+      return mimelib.parseMimeWords(matchResult[1]) if matchResult 
     if element == 'address'
       matchResult = fromField.match(/<(.*)>/)
-      return matchResult[1]
+      if matchResult
+        return mimelib.parseMimeWords(matchResult[1])
+      else return fromField
     return ''
 
   # Analyze message structure returned by node-imap to find the 'text' type content.
@@ -104,10 +122,10 @@ class Message
     @sample = Message.generateSample(@body.text) if not @sample and @body
 
   # Save a new message into Riak
-  # Save to the good userid
-  save: (userId, callback) ->
-    userBucket = riak.bucket userId
+  save: (userId, mailboxName, callback) ->
+    userBucket = riak.bucket "#{userId}:#{mailboxName}"
     rObject = userBucket.object.new @uid, @
+    rObject.addToIndex 'seqno', @seqno
     userBucket.objects.save rObject, (err, obj) ->
       return callback(err) if callback
 

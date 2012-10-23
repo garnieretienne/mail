@@ -60,7 +60,7 @@ More informations: http://docs.basho.com/riak/latest/cookbooks/Riak-Search---Ind
                ]},
 ```
 
-* Set up indexing on the providers bucket
+* Set up indexing on providers bucket
 
 ```
 search-cmd install providers

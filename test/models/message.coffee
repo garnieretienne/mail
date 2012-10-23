@@ -105,11 +105,11 @@ describe 'Message', ->
       expect(message.from.md5).to.equal 'fa381def9e677a8e7f672ec2eabfaf3a'
       expect(message.sample).to.equal 'Lorem ipsum dolor sit amet, consectetur adipisicin...'
 
-  it 'should save a message into database', (done)->
+  it 'should save a message into database and load it using it UID', (done)->
     message = new Message this.attr
-    message.save 'testing@domain.tld', (err) ->
+    message.save 'testing@domain.tld', 'INBOX', (err) ->
       expect(err).to.be.null
-      Message.getByUID 'testing@domain.tld', message.uid, (err, gotMessage) ->
+      Message.getByUID 'testing@domain.tld', 'INBOX', message.uid, (err, gotMessage) ->
         expect(err).to.be.null
         expect(gotMessage.subject).to.equal message.subject
         done()
@@ -249,6 +249,12 @@ describe 'Message', ->
     mappedPartIDs = Message.mapPartIDs structure
     expect(mappedPartIDs['text/plain']).to.equal '1.1'
     expect(mappedPartIDs['text/html']).to.equal '1.2'
+
+  it 'should find a message using the seqno', (done) ->
+    Message.getBySeqno 'testing@domain.tld', 'INBOX', 1111, (err, message) ->
+      throw err if err
+      expect(message.uid).to.equal 111
+      done()
 
 
 

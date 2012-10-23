@@ -33,7 +33,8 @@ class Account
 
   # Disconnect from the imap server
   disconnect: (callback) ->
-    @imap.emit 'logout'
+    if @imap
+      @imap.emit 'logout'
     return callback() if callback
 
   # Select a mailbox for futher actions
@@ -83,7 +84,7 @@ class Account
     # emit a 'new message' event.
     @imap.on 'fetchHeaders:data', (imapMessage) ->
       Message.fromImapMessage imapMessage, (message) ->
-        message.save _this.username, (err) ->
+        message.save _this.username, _this.mailbox.name, (err) ->
           fetchEvents.emit('error', err) if err
           _this.emit 'message:new', message
           processed = processed + 1
