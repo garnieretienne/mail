@@ -7,10 +7,10 @@ Mail.Views.MessageThumbView = Backbone.View.extend
     _.bindAll this, 'render', 'buildClassName'
 
   # Build the class aatribute for this message thumb.
-  # * Message get a class of 'unread' if it not marked with the 'Seen' flag.
+  # * Message get a class of 'unread' if it not marked with the '\Seen' flag.
   buildClassName: ->
     className = []
-    if !this.model.flagged('Seen')
+    if !this.model.flagged('\\Seen')
       className.push 'unread'
     return className.join(' ')
   
