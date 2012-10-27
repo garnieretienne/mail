@@ -73,6 +73,5 @@ block javascript
     // Init socket.io    
     var socket = io.connect('/');
     socket.on('message:new', function (message) {
-      console.log(message);
       webmailRouter.messages.add(message);
     });

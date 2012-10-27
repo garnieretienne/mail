@@ -1,11 +1,13 @@
 #message-list {
+  font-size: 0.9em;
   border-top: none;
   height: 100%;
   overflow-y: scroll;
   .message-thumb {
+    border-left: 6px solid transparent;
     cursor: pointer;
     padding: 0.8em;
-    border-bottom: 1px solid @grayLighter;
+    border-bottom: 1px solid darken(@grayLighter, 10%);
     .date {
       display: block;
       float: right;
@@ -13,21 +15,19 @@
       color: @gray;
     }
     .from {
+      border-left: 1px solid @grayLighter;
+      padding-left: 0.4em;
       margin-bottom: 0.2em;
       min-height: 50px;
       .from-avatar {
         width: 48px;
         display: block;
         float: left;
+        margin-right: 0.4em;
       }
       .from-name {
-        margin-left: 50px;
-        padding-left: 1em;
-        font-weight: bold;
       }
       .from-email {
-        margin-left: 50px;
-        padding-left: 1em;
         color: @gray;
         font-style: italic;
         font-size: 0.9em;
@@ -44,11 +44,18 @@
     }
   }
   .message-thumb.unread {
-    border-bottom: 1px solid @blue;
-    border-left: 6px solid @blue;
+    border-left: 2px solid @blue;
     background-color: lighten(@blue, 50%);
+    .from {
+      border-left: 1px solid darken(@grayLighter, 10%);
+    }
   }
   .message-thumb:hover {
     background-color: lighten(@gray, 50%);
+  }
+  .message-thumb.unread:hover {
+    .from {
+      border-left: 1px solid @grayLighter;
+    }
   }
 }

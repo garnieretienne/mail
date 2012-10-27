@@ -10,5 +10,19 @@ html {
     .fit-max-height {
       height: 80%;
     }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track-piece {
+      background-color: @grayLighter;
+      -webkit-border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:vertical {
+      height: 50px;
+      background-color: #666;
+      border: 1px solid #eee;
+      -webkit-border-radius: 6px;
+    }
   }
 }
