@@ -10,7 +10,8 @@ var express = require('express')
   , http = require('http')
   , path = require('path')
   , socketIO = require('socket.io')
-  , RedisStore = require('connect-redis')(express);
+  , RedisStore = require('connect-redis')(express)
+  , sequelize = require(__dirname+'/config/database')
 
 // Module.export is needed for testing
 var app = module.exports = express();
@@ -50,18 +51,13 @@ app.configure('test', function(){
 });
 
 // Socket.io
-server = http.createServer(app);
-io = socketIO.listen(server);
+var server = http.createServer(app);
+var io = socketIO.listen(server);
 
 // Routes
 require('./apps/authentication/routes')(app);
 require('./apps/webmail/routes')(app, io);
 require('./apps/api/routes')(app);
-
-// tmp
-//io.sockets.on('connection', function(socket){
-//  socket.emit('testing', "You are connected");
-//});
 
 // App
 server.listen(app.get('port'), function(){

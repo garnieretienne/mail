@@ -1,6 +1,6 @@
 Account = require '../../models/account'
 
-routes = (app) ->
+routes = (app, io) ->
 
   # Authentication
   app.all '/mail', (req, res, next) ->

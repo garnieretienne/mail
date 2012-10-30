@@ -16,13 +16,15 @@
     "mailparser": "~0.2.30",
     "connect-redis": "~1.4.4",
     "nodiak": "0.0.7",
-    "mimelib": "~0.2.7"
+    "mimelib": "~0.2.7",
+    "sequelize": "~1.6.0-alpha-2"
   },
   "devDependencies": {
     "packjs": "0.0.6",
     "request": "~2.11.1",
     "mocha": "~1.4.2",
     "chai": "~1.2.0",
-    "cheerio": "~0.9.2"
+    "cheerio": "~0.9.2",
+    "sqlite3": ">=2.0.0"
   }
 }

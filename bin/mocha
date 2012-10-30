@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
-
-./node_modules/.bin/mocha --timeout 10000 test/_helper.js test/apps/*.coffee test/lib/*.coffee test/models/*.coffee
+#
+# --globals columnTypes: ignore "Error: global leak detected: columnTypes"
+./node_modules/.bin/mocha --globals columnTypes --timeout 10000 test/_helper.js test/apps/*.coffee test/lib/*.coffee test/models/*.coffee
