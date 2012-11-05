@@ -1,3 +1,5 @@
+IMAP = require('../lib/imap')
+
 module.exports = (sequelize, DataTypes) ->
   return sequelize.define "Account", 
     emailAddress: { type: DataTypes.STRING, allowNull: false, unique: true } # Account email address
@@ -13,6 +15,9 @@ module.exports = (sequelize, DataTypes) ->
       #  - username
       #  - password
       new: (attributes, callback) ->
+        # Find the email address provider
+        #TODO
+  
         # Store virtual attributes
         virtual = {}
         virtual.username = attributes.username
@@ -29,3 +34,9 @@ module.exports = (sequelize, DataTypes) ->
         account[key] = value for key, value of virtual
 
         return account
+
+    instanceMethods:
+
+      authenticate: (callback) ->
+        IMAP.authenticate @imap, @username, @password, (err, authenticated) ->
+        return callback(err, authenticated)

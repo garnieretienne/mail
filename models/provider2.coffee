@@ -1,3 +1,9 @@
+sequelize = require(__dirname+'/../config/database')
+Domain   = sequelize.import(__dirname + "/../models/domain")
+Domain.belongsTo(@)
+
+console.log Models
+
 module.exports = (sequelize, DataTypes) ->
   return sequelize.define "Provider", 
     name:        { type: DataTypes.STRING, allowNull: false, unique: true } # Name of the provider
@@ -9,3 +15,9 @@ module.exports = (sequelize, DataTypes) ->
     smtp_secure: { type: DataTypes.BOOLEAN, allowNull: false }              # Does SMTP server use secure connection
   ,
     timestamps: false
+    classMethods:
+      search: (emailAddress, callback) ->
+        domain = /^[\w\.]+@([\w\.]+)$/.exec(emailAddress)[1]
+        Domain.find({name: domain}).success (domain) ->
+          domain.getProvider().success (provider) ->
+            return provider

@@ -67,7 +67,6 @@ describe 'Association and Sync for Provider and Domain, ', ->
           throw err
 
     it 'should retrive the provider for a given domain', (done) ->
-      console.log "CLEAR"
       provider = @provider
       provider.save().success ->
         gmailDNS  = Domain.build
@@ -88,4 +87,16 @@ describe 'Association and Sync for Provider and Domain, ', ->
                 throw err    
           .error (err) ->
             throw err
+
+    it 'should search for a provider given an email address', (done) ->
+      provider = @provider
+      provider.save().success ->
+        gmailDNS  = Domain.build
+          name: 'gmail.com'
+        googleDNS = Domain.build
+          name: 'google.com'
+        provider.setDomains([gmailDNS, googleDNS])
+          .success ->
+            Provider.search 'testing@gmail.com', (provider) ->
+              expect(provider.name).to.equal 'Local Mail'
     

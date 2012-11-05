@@ -28,3 +28,9 @@ describe 'Account', ->
       expect(account.username).to.equal Testing.imapSettings.username
       expect(account.password).to.equal Testing.imapSettings.password
       done()
+
+  it "should try to authenticate the account with given credentials", (done) ->
+    @account.authenticate (err, authenticated) ->
+      expect(err).to.be.null
+      expect(authenticated).to.be.true
+      done()
