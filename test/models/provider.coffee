@@ -71,7 +71,7 @@ describe 'Association and Sync for Provider and Domain,', ->
           name: 'google.com'
         provider.setDomains([gmailDNS, googleDNS])
           .success ->
-            Domain.find({name: 'gmail.com'})
+            Domain.find(where: {name: 'gmail.com'})
               .success (gmailDNS) ->
                 gmailDNS.getProvider()
                   .success (provider) ->

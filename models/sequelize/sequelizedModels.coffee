@@ -6,20 +6,20 @@ class SequelizeModels
     # Models
     @Provider = sequelize.import(__dirname + "/provider")
     @Domain   = sequelize.import(__dirname + "/domain")
-    #@Account  = sequelize.import(__dirname + "/account")
+    @Account  = sequelize.import(__dirname + "/account")
 
     # Association Provider <> Domain (One to Many)
     @Provider.hasMany(@Domain, {as: 'Domains'})
     @Domain.belongsTo(@Provider)
     
     # Association Provider <> Account (One to Many)
-    #@Provider.hasMany(@Account, {as: 'Accounts'})
-    #@Account.belongsTo(@Provider)
+    @Provider.hasMany(@Account, {as: 'Accounts'})
+    @Account.belongsTo(@Provider)
 
     # Migrations (tmp)
     @Provider.sync()
     @Domain.sync()
-    #@Account.sync()
+    @Account.sync()
 
   Provider: ->
     return Provider
@@ -27,7 +27,8 @@ class SequelizeModels
   Domain: ->
     return Domain
 
-  #Account: -> Account
+  Account: -> 
+    return Account
 
 models = new SequelizeModels()
 module.exports = models

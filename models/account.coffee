@@ -1,50 +1,71 @@
-EventEmitter = require('events').EventEmitter
 IMAP = require('../lib/imap')
-Message = require './message'
-Mailbox = require './mailbox'
-Provider = require './provider'
 
-# TODO: imap logout, = Account / disconnect
+# Sequelized Models
+SequelizedModels   = require(__dirname + '/sequelize/sequelizedModels')
+SequelizedAccount  = SequelizedModels.Account
+
+# Models
+Provider = require(__dirname + '/provider')
+Mailbox  = require(__dirname + '/mailbox')
+Message  = require(__dirname + '/message')
+
 class Account
-
-  # Password must be a private attribute
-  password = ''
+  @prototype: SequelizedAccount.build()
+  @find: (attributes) ->
+    return SequelizedAccount.find attributes
+  @sync: (attributes) ->
+    return SequelizedAccount.sync attributes
 
   constructor: (attributes) ->
-    @username = attributes.username
-    password = attributes.password
+    @username      = attributes.username
+    @emailAddress  = @username
+    @password      = attributes.password
 
   # Connect to the imap server
+  # Open INBOX on connection.
+  # TODO: events
   connect: (callback) ->
-    if !@imap || !@smtp
-      return callback(new Error('No provider set!'))
     _this = @
-    @imap = new IMAP 
-      username: @username
-      password: password
-      host:     @imap.host
-      port:     @imap.port
-      secure:   @imap.secure
-    @imap.on 'message:new', (message) ->
-      _this.emit 'message:new', message
-    @imap.connect (err) ->
-      return callback(err) if err
-      return callback(null)
+    @imapSettings (imapSettings) ->
+      if imapSettings
+        imapSettings.username = _this.username
+        imapSettings.password = _this.password
+        _this.imap = new IMAP imapSettings
+        _this.imap.connect (err) ->
+          return callback(err) if err
 
+          # Cache the account if not cached
+          # + Set up the provider association
+          if _this.isNewRecord
+            if !_this.ProviderId
+              err = new Error 'this account cannot be cached without provider'
+              return callback(err)
+            _this.save().success ->
+              _this.select 'INBOX', (err) ->
+                return callback(err)
+          else
+            _this.select 'INBOX', (err) ->
+                return callback(err)
+      else
+        err = new Error 'No imap settings for this email address'
+        return callback(err)
+    
   # Disconnect from the imap server
   disconnect: (callback) ->
     if @imap
-      @imap.emit 'logout'
-    return callback() if callback
+      @imap.emit 'logout', ->
+        return callback() if callback
 
   # Select a mailbox for futher actions
   # TODO: partial sync on select
   # TODO: events
-  # TODO: mailbox object
-  select: (mailbox, callback) ->
+  select: (mailboxName, callback) ->
+    if !@imap 
+      err = new Error 'Not connected to any IMAP server'
+      return callback(err)
     _this = @
-    @imap.open mailbox, (err, box) ->
-      _this.mailbox = new Mailbox
+    @imap.open mailboxName, (err, box) ->
+      _this.selectedMailbox = new Mailbox
         name:        box.name
         uidvalidity: box.uidvalidity
         messages:
@@ -61,57 +82,85 @@ class Account
   #  - end  : append when the synchronization is done
   # TODO: full, partial (new + old), new, old
   synchronize: (settings, callback) ->
-    _this = @
-    type       = settings.type || 'partial'
-    maxSeqno   = @mailbox.messages.total
-    processed  = 0
-    fetchEvents = new EventEmitter()
+    if !@selectedMailbox
+      err = new Error 'No selected mailbox'
+      return callback(err)
     
-    # Segment the fetch
-    messagePerRange = 10
-    rangeNumber     = Math.floor(maxSeqno / messagePerRange)
-    ranges = []
-    index = 1
-    if maxSeqno > messagePerRange
-      for i in [1..rangeNumber]
-        ranges.push "#{index}:#{messagePerRange*i}"
-        index = (messagePerRange*i) + 1
-    ranges.push "#{index}:*"
-
-    # Fetch and cache the headers using range
-    # When a message is fetched, 
-    # save it in the database and
-    # emit a 'new message' event.
-    @imap.on 'fetchHeaders:data', (imapMessage) ->
-      Message.fromImapMessage imapMessage, (message) ->
-        message.save _this.username, _this.mailbox.name, (err) ->
-          fetchEvents.emit('error', err) if err
-          _this.emit 'message:new', message
-          processed = processed + 1
-          if processed == maxSeqno
-            fetchEvents.emit('end') 
-
-    # Using nextTick to be able to listen for events.
-    # http://howtonode.org/understanding-process-next-tick
-    process.nextTick ->
-     for range in ranges
-        _this.imap.fetchHeaders range
-    return fetchEvents
+    #    _this = @
+    #    type       = settings.type || 'partial'
+    #    maxSeqno   = @mailbox.messages.total
+    #    processed  = 0
+    #    fetchEvents = new EventEmitter()
+    #    
+    #    # Segment the fetch
+    #    messagePerRange = 10
+    #    rangeNumber     = Math.floor(maxSeqno / messagePerRange)
+    #    ranges = []
+    #    index = 1
+    #    if maxSeqno > messagePerRange
+    #      for i in [1..rangeNumber]
+    #        ranges.push "#{index}:#{messagePerRange*i}"
+    #        index = (messagePerRange*i) + 1
+    #    ranges.push "#{index}:*"
+    #
+    #    # Fetch and cache the headers using range
+    #    # When a message is fetched, 
+    #    # save it in the database and
+    #    # emit a 'new message' event.
+    #    @imap.on 'fetchHeaders:data', (imapMessage) ->
+    #      Message.fromImapMessage imapMessage, (message) ->
+    #        message.save _this.username, _this.mailbox.name, (err) ->
+    #          fetchEvents.emit('error', err) if err
+    #          _this.emit 'message:new', message
+    #          processed = processed + 1
+    #          if processed == maxSeqno
+    #            fetchEvents.emit('end') 
+    #
+    #    # Using nextTick to be able to listen for events.
+    #    # http://howtonode.org/understanding-process-next-tick
+    #    process.nextTick ->
+    #     for range in ranges
+    #        _this.imap.fetchHeaders range
+    #    return fetchEvents
 
   # Authenticate the account
   authenticate: (callback) ->
-    IMAP.authenticate @imap, @username, password, (err, authenticated) ->
-      return callback(err, authenticated)
+    _this = @
+    @imapSettings (imapSettings) ->
+      IMAP.authenticate imapSettings, _this.username, _this.password, (err, authenticated) ->
+        return callback(err, authenticated)
 
   # Find the email address provider
   findProvider: (callback) ->
-    _this = @
-    Provider.search @username, (err, provider) ->
-      if provider.name
-        _this.imap = provider.imap
-        _this.smtp = provider.smtp
-        return callback(true)
-      return callback(false)
+    Provider.search @emailAddress, (provider) ->
+      if provider
+        return callback(true, provider)
+      else
+        return callback(false, null)
 
-Account.prototype.__proto__ = EventEmitter.prototype;
+  # Access IMAP settings
+  # If account is not yet verified and saved into the database, use local variable to store imap settings,
+  # Else return associed provider imap settings.
+  imapSettings: (callback) ->
+    _this = @
+    @getProvider().success (provider) ->
+      if provider
+        # Provider is loaded from cache
+        imap =
+          server: provider.imap_server
+          port:   provider.imap_port
+          secure: provider.imap_secure
+        return callback(imap)
+      else
+        _this.findProvider (found, provider) ->
+          if found
+            _this.ProviderId = provider.id # Cache the provider
+            imap =
+              server: provider.imap_host
+              port:   provider.imap_port
+              secure: provider.imap_secure
+            return callback(imap)
+          else
+            return callback(null)
+
 module.exports = Account

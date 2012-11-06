@@ -25,7 +25,7 @@ describe 'Domain', ->
         throw err
 
   it 'should load a domain from the database', (done) ->
-    Domain.find({name: 'gmail.com'})
+    Domain.find(where: {name: 'gmail.com'})
       .success (domain) ->
         expect(domain.name).to.equal 'gmail.com'
         done()

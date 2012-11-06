@@ -3,7 +3,7 @@ SequelizedModels   = require(__dirname + '/sequelize/sequelizedModels')
 SequelizedProvider = SequelizedModels.Provider
 
 # Models
-Domain = require(__dirname+'/domain')
+Domain = require(__dirname + '/domain')
 
 class Provider
   @prototype: SequelizedProvider.build()
@@ -17,7 +17,7 @@ class Provider
 
   @search: (emailAddress, callback) ->
     domain = /^[\w\.]+@([\w\.]+)$/.exec(emailAddress)[1]
-    Domain.find({name: domain}).success (domain) ->
+    Domain.find(where: {name: domain}).success (domain) ->
       if domain
         domain.getProvider().success (provider) ->
           return callback(provider)

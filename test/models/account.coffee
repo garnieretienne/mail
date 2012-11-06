@@ -1,60 +1,138 @@
 Testing = require '../_helper.js'
 should  = require('chai').should()
-expect = require('chai').expect
-assert = require('chai').assert
-Account = require '../../models/account'
+expect  = require('chai').expect
+assert  = require('chai').assert
+
+# Models
+Account  = require '../../models/account'
+Provider = require '../../models/provider'
+Domain   = require '../../models/domain'
 
 describe 'Account', ->
 
   before (done) ->
-    this.account = new Account
-      username: Testing.imapSettings.username
-      password: Testing.imapSettings.password
-    this.account.findProvider =>
+    _this = @
+    Domain.sync({force: true}).success ->
+      Provider.sync({force: true}).success ->
+        gmailDNS = new Domain
+          name: 'gmail.com'
+        _this.provider = new Provider
+          name: 'Local Mail'
+          imap_host: 'localhost'
+          imap_port: 993
+          imap_secure: true
+          smtp_host: 'localhost'
+          smtp_port: 465
+          smtp_secure: true
+        _this.provider.save()
+          .success ->
+            _this.provider.setDomains([gmailDNS])
+              .success ->
+                done()
+              .error (err) ->
+                throw err
+          .error (err) ->
+            throw err
+
+  beforeEach (done) ->
+    _this = @
+    Account.sync({force: true}).success ->
+      _this.account = new Account
+        username: Testing.imapSettings.username
+        password: Testing.imapSettings.password
       done()
 
-  it 'should retrive the username but not the password', ->
-    expect(this.account.username).to.equal 'webmail.testing.dev@gmail.com'
-    expect(this.account.password).to.equal undefined
+  it 'should retrieve the username (alias for email address) but not the password', ->
+    expect(@account.emailAddress).to.equal Testing.imapSettings.username
+    expect(@account.username).to.equal Testing.imapSettings.username
+    expect(@account.password).to.equal Testing.imapSettings.password
 
-  it 'should connect the account INBOX', (done) ->
-    expect(this.account.imap.host).to.equal 'localhost'
-    expect(this.account.imap.port).to.equal 993
-    expect(this.account.imap.secure).to.be.true
-    this.account.connect done
+  it 'should save the account in the database', (done) ->
+    @account.save()
+      .success (account) ->
+        expect(account.emailAddress).to.equal Testing.imapSettings.username
+        expect(account.username).to.equal Testing.imapSettings.username
+        expect(account.password).to.equal Testing.imapSettings.password
+        done()
+      .error (err) ->
+        throw err
+
+  it 'should load an account from the database whith no unpersistent attributes', (done) ->
+    @account.save()
+      .success ->
+        Account.find(where: {emailAddress: Testing.imapSettings.username}).success (account) ->
+          expect(account).to.be.not.null
+          expect(account.emailAddress).to.equal Testing.imapSettings.username
+          expect(account.username).to.equal undefined
+          expect(account.password).to.equal undefined
+          done()
+
+  it 'should find the provider for this account', (done) ->
+    @account.findProvider (found, provider) ->
+      expect(found).to.be.true
+      expect(provider.name).to.equal 'Local Mail'
+      done()
+
+  it 'should NOT find the provider for this account', (done) ->
+    account = new Account
+      username: 'nobody@nowhere.com'
+      password: 'ohyeah'
+    account.findProvider (found, provider) ->
+      expect(found).to.be.false
+      expect(provider).to.be.null
+      done()
 
   it "should try to authenticate the account with given credentials", (done) ->
-    this.account.authenticate (err, authenticated) ->
-      expect(err).to.be.null
+    @account.authenticate (err, authenticated) ->
+      throw err if err
       expect(authenticated).to.be.true
       done()
 
-  it 'should fully synchronize the account', (done) ->
-    _this = this.account
-    total = 0
-    
-    this.account.on 'message:new', (message) ->
-      expect(message.seqno).to.be.below total+1
-
-    this.account.connect (err) ->
+  it 'should connect the account INBOX', (done) ->
+    _this = @
+    @account.connect (err) ->
       throw err if err
-      _this.select 'INBOX', (err, mailbox) ->
-        throw err if err
-        total = _this.mailbox.messages.total
-        settings = 
-          type: 'full'
-        sync = _this.synchronize settings
-        sync.on 'error', (error) ->
-          throw err if err
-        sync.on 'end', ->
-          done()
+      expect(_this.account.selectedMailbox.name).to.equal 'INBOX'
+      _this.account.imap.imap.logout ->
+        done()
 
   it 'should disconnect the account', (done) ->
-    account = this.account
-    account.connect (err) ->
+    _this = @
+    @account.connect (err) ->
       throw err if err
-      account.disconnect ->
-        requests  = account.imap.imap._state.requests
+      _this.account.disconnect ->
+        requests  = _this.account.imap.imap._state.requests
         lastIndex = requests.length - 1
         expect(requests[lastIndex].cmd).to.equal 'LOGOUT'
         done()
+
+  it "should cache the account on first connection", (done) ->
+    _this = @
+    @account.connect (err) ->
+      throw err if err
+      Account.find(where: {emailAddress: Testing.imapSettings.username}).success (account) ->
+        expect(account).to.be.not.null
+        expect(account.emailAddress).to.equal Testing.imapSettings.username
+        account.getProvider().success (provider) ->
+          expect(provider).to.not.be.null
+          _this.account.disconnect ->
+            done()
+
+  it "should test if the account is cached, load it and retrive the provider", (done) ->
+    _this = @
+    Account.find(where: {emailAddress: Testing.imapSettings.username}).success (account) ->
+      expect(account).to.be.null
+      _this.account.connect (err) ->
+        throw err if err
+        Account.find(where: {emailAddress: Testing.imapSettings.username}).success (account) ->
+          expect(account).to.be.not.null
+          expect(account.ProviderId).to.be.not.null
+          account.getProvider().success (provider) ->
+            expect(provider).to.not.be.null
+            done()
+
+  #it 'should list the account mailboxes', ->
+
+  #it 'should list the account suscribed mailboxes', ->
+
+  #it 'should fully synchronize the account', ->
