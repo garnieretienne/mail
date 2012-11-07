@@ -11,16 +11,12 @@ describe 'Mailbox', ->
       name:        '[Gmail]'
       uidvalidity: 123456789
       selectable:  false
-      hasChilds:   true
-      hasParent:   false
       messages:
         total:     3000
         unread:    20
     expect(mailbox.name).to.equal '[Gmail]'
     expect(mailbox.uidvalidity).to.equal 123456789
     expect(mailbox.selectable).to.equal false
-    expect(mailbox.hasChilds).to.equal true
-    expect(mailbox.hasParent).to.equal false
     expect(mailbox.messages.total).to.equal 3000
     expect(mailbox.messages.unread).to.equal 20
 
@@ -29,15 +25,34 @@ describe 'Mailbox', ->
       name: '[Gmail]'
     expect(mailbox.selectable).to.equal true
 
-  it 'should not have childs or parent by default', ->
-    mailbox = new Mailbox
-      name: '[Gmail]'
-    expect(mailbox.hasChilds).to.equal false
-    expect(mailbox.hasParent).to.equal false
-
   it 'should set the messages attributes to 0 by default', ->
     mailbox = new Mailbox
       name: '[Gmail]'
     expect(mailbox.messages.total).to.equal 0
     expect(mailbox.messages.unread).to.equal 0
+
+  it 'should save the mailbox into database', (done) ->
+    inbox = new Mailbox
+      name:        'INBOX'
+      uidvalidity: 123456789
+      messages:
+        total:     3000
+        unread:    20
+    inbox.save()
+      .success (mailbox) ->
+        expect(mailbox.name).to.equal 'INBOX'
+        done()
+      .error (err) ->
+        throw err
+
+  it 'should load a mailbox from the database without the non permanant attributes (messages total and unread)', (done) ->
+    Mailbox.find(where: {name: 'INBOX'})
+      .success (mailbox) ->
+        expect(mailbox.name).to.equal 'INBOX'
+        expect(mailbox.messages).to.equal undefined
+        done()
+      .error (err) ->
+        throw err
+
+
 

@@ -10,16 +10,23 @@ Mailbox  = require(__dirname + '/mailbox')
 Message  = require(__dirname + '/message')
 
 class Account
-  @prototype: SequelizedAccount.build()
-  @find: (attributes) ->
-    return SequelizedAccount.find attributes
+  @prototype = SequelizedAccount.build()
+  @find: (attributes, callback) ->
+    _this = @
+    SequelizedAccount.find(attributes).success (sequelizedAccount) ->
+      if sequelizedAccount
+        #Account.prototype.__proto__ = sequelizedAccount
+        account = new Account()
+        return callback(account)
+      else return callback(null)
   @sync: (attributes) ->
     return SequelizedAccount.sync attributes
 
   constructor: (attributes) ->
-    @username      = attributes.username
-    @emailAddress  = @username
-    @password      = attributes.password
+    if attributes
+      @username      = attributes.username
+      @emailAddress  = attributes.emailAddress || attributes.username
+      @password      = attributes.password
 
   # Connect to the imap server
   # Open INBOX on connection.
