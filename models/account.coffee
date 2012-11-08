@@ -88,6 +88,7 @@ class Account
   #  - error: append when an error append on message fetch
   #  - end  : append when the synchronization is done
   # TODO: full, partial (new + old), new, old
+  # TODO: save uidvalidity
   synchronize: (settings, callback) ->
     if !@selectedMailbox
       err = new Error 'No selected mailbox'
@@ -183,7 +184,15 @@ class Account
           name: key
           selectable: !('NOSELECT' in IMAPMailboxes[key].attribs)
         mailboxes.push mailbox
+        if 'HASCHILDREN' in IMAPMailboxes[key].attribs
+          for subkey of IMAPMailboxes[key].children
+            mailbox = new Mailbox
+              name: subkey
+              selectable: !('NOSELECT' in IMAPMailboxes[key].children[subkey].attribs)
+            mailboxes.push mailbox
       return callback(null, mailboxes)
-    
+
+    # Sync mailbox
+    # TODO: get uidvalidity and parents
 
 module.exports = Account

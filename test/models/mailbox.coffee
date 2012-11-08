@@ -50,5 +50,4 @@ describe 'Mailbox', ->
       expect(mailbox.name).to.equal 'INBOX'
       done()
 
-
-
+  # it 'should make a mailbox with a parent mailbox', (done) ->

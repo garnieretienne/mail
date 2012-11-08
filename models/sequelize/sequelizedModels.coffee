@@ -20,6 +20,9 @@ class SequelizeModels
     # Association Account <> Mailbox (One to Many)
     @Account.hasMany(@Mailbox, {as: 'Mailboxes'})
     @Mailbox.belongsTo(@Account)
+
+    # Association Mailbox <> Mailbox (One to One)
+    @Mailbox.hasOne(@Mailbox, {as: 'Parent'})    
   
   # Run table migration
   migrate: ->
