@@ -1,3 +1,4 @@
+util = require('util')
 IMAP = require('../lib/imap')
 
 # Sequelized Models
@@ -15,8 +16,7 @@ class Account
     _this = @
     SequelizedAccount.find(attributes).success (sequelizedAccount) ->
       if sequelizedAccount
-        #Account.prototype.__proto__ = sequelizedAccount
-        account = new Account()
+        account = SequelizedModels.convert(sequelizedAccount, Account)
         return callback(account)
       else return callback(null)
   @sync: (attributes) ->
@@ -169,5 +169,12 @@ class Account
             return callback(imap)
           else
             return callback(null)
+
+  # List the mailboxes from the IMAP server
+  # getIMAPMailboxes: (callback) ->
+  #   if !@imap 
+  #     err = new Error 'Not connected to any IMAP server'
+  #     return callback(err, null)
+  #   return callback(null, null) #TODO
 
 module.exports = Account

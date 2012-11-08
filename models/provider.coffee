@@ -7,8 +7,13 @@ Domain = require(__dirname + '/domain')
 
 class Provider
   @prototype: SequelizedProvider.build()
-  @find: (attributes) ->
-    return SequelizedProvider.find attributes
+  @find: (attributes, callback) ->
+    _this = @
+    SequelizedProvider.find(attributes).success (sequelizedProvider) ->
+      if sequelizedProvider
+        provider = SequelizedModels.convert(sequelizedProvider, Provider)
+        return callback(provider)
+      else return callback(null)
   @sync: (attributes) ->
     return SequelizedProvider.sync attributes
 
@@ -17,9 +22,10 @@ class Provider
 
   @search: (emailAddress, callback) ->
     domain = /^[\w\.]+@([\w\.]+)$/.exec(emailAddress)[1]
-    Domain.find(where: {name: domain}).success (domain) ->
+    Domain.find where: {name: domain}, (domain) ->
       if domain
-        domain.getProvider().success (provider) ->
+        domain.getProvider().success (sequelizedProvider) ->
+          provider = SequelizedModels.convert(sequelizedProvider, Provider)
           return callback(provider)
       else
         return callback(null)

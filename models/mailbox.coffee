@@ -2,10 +2,18 @@
 SequelizedModels  = require(__dirname + '/sequelize/sequelizedModels')
 SequelizedMailbox = SequelizedModels.Mailbox
 
+# Migration
+SequelizedModels.migrate()
+
 class Mailbox
   @prototype: SequelizedMailbox.build()
-  @find: (attributes) ->
-    return SequelizedMailbox.find attributes
+  @find: (attributes, callback) ->
+    _this = @
+    SequelizedMailbox.find(attributes).success (sequelizedMailbox) ->
+      if sequelizedMailbox
+        mailbox = SequelizedModels.convert(sequelizedMailbox, Mailbox)
+        return callback(mailbox)
+      else return callback(null)
   @sync: (attributes) ->
     return SequelizedMailbox.sync attributes
 

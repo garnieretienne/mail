@@ -20,12 +20,23 @@ class SequelizeModels
     # Association Account <> Mailbox (One to Many)
     @Account.hasMany(@Mailbox, {as: 'Mailboxes'})
     @Mailbox.belongsTo(@Account)
-
-    # Migrations (tmp)
+  
+  # Run table migration
+  migrate: ->
     @Provider.sync()
     @Domain.sync()
     @Account.sync()
     @Mailbox.sync()
+
+  # Convert a Sequelized object into given className
+  # className must support new className() with no arguments
+  convert: (object, className) ->
+    _this = @
+    convertedObject = new className()
+    for key of object
+      if object.hasOwnProperty(key)
+        convertedObject[key] = object[key]
+    return convertedObject
 
   Provider: ->
     return Provider

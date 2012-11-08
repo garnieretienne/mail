@@ -4,6 +4,9 @@ should  = require('chai').should()
 expect = require('chai').expect
 assert = require('chai').assert
 
+# Sequelized Models
+SequelizedModels = require(__dirname + '/../../models/sequelize/sequelizedModels')
+
 # Models
 Provider = require '../../models/provider'
 Domain   = require '../../models/domain'
@@ -62,7 +65,7 @@ describe 'Association and Sync for Provider and Domain,', ->
         .error (err) ->
           throw err
 
-    it 'should retrive the provider for a given domain', (done) ->
+    it 'should retrieve the provider for a given domain', (done) ->
       provider = @provider
       provider.save().success ->
         gmailDNS  = new Domain
@@ -71,16 +74,14 @@ describe 'Association and Sync for Provider and Domain,', ->
           name: 'google.com'
         provider.setDomains([gmailDNS, googleDNS])
           .success ->
-            Domain.find(where: {name: 'gmail.com'})
-              .success (gmailDNS) ->
-                gmailDNS.getProvider()
-                  .success (provider) ->
-                    expect(provider.name).to.equal 'Local Mail'
-                    done()
-                  .error (err) ->
-                    throw err
-              .error (err) ->
-                throw err    
+            Domain.find where: {name: 'gmail.com'}, (gmailDNS) ->
+              gmailDNS.getProvider()
+                .success (sequelizedProvider) ->
+                  provider = SequelizedModels.convert sequelizedProvider, Provider
+                  expect(provider.name).to.equal 'Local Mail'
+                  done()
+                .error (err) ->
+                  throw err   
           .error (err) ->
             throw err
 
@@ -101,4 +102,3 @@ describe 'Association and Sync for Provider and Domain,', ->
       Provider.search 'test@unknow.com', (provider) ->
         expect(provider).to.be.null
         done()
-    

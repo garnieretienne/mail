@@ -45,14 +45,10 @@ describe 'Mailbox', ->
       .error (err) ->
         throw err
 
-  it 'should load a mailbox from the database without the non permanant attributes (messages total and unread)', (done) ->
-    Mailbox.find(where: {name: 'INBOX'})
-      .success (mailbox) ->
-        expect(mailbox.name).to.equal 'INBOX'
-        expect(mailbox.messages).to.equal undefined
-        done()
-      .error (err) ->
-        throw err
+  it 'should load a mailbox from the database', (done) ->
+    Mailbox.find where: {name: 'INBOX'}, (mailbox) ->
+      expect(mailbox.name).to.equal 'INBOX'
+      done()
 
 
 
