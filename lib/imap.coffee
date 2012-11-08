@@ -78,6 +78,10 @@ class IMAP
     fetch.on 'end', ->
       return callback() if callback
 
+  getMailboxes: (callback) ->
+    @imap.getBoxes (err, boxes) ->
+      return callback(err, boxes)
+
   # TODO LATER
   # /////////////////////////////////////////////////////////////////////
   # Fetch new messages using seqno.

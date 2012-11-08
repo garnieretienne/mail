@@ -171,10 +171,19 @@ class Account
             return callback(null)
 
   # List the mailboxes from the IMAP server
-  # getIMAPMailboxes: (callback) ->
-  #   if !@imap 
-  #     err = new Error 'Not connected to any IMAP server'
-  #     return callback(err, null)
-  #   return callback(null, null) #TODO
+  # TODO: Children
+  getIMAPMailboxes: (callback) ->
+    if !@imap 
+      err = new Error 'Not connected to any IMAP server'
+      return callback(err, null)
+    @imap.getMailboxes (err, IMAPMailboxes) ->
+      mailboxes = []
+      for key of IMAPMailboxes
+        mailbox = new Mailbox
+          name: key
+          selectable: !('NOSELECT' in IMAPMailboxes[key].attribs)
+        mailboxes.push mailbox
+      return callback(null, mailboxes)
+    
 
 module.exports = Account

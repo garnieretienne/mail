@@ -33,7 +33,6 @@ describe 'IMAP', ->
         imap.emit 'logout'
         done()
 
-  # Need for authenticated? Authenticate if no error ?
   it 'should authenticate an user using his IMAP credentials', (done) ->
     imapSettings = 
       host:   this.imapSettings.host
@@ -60,3 +59,11 @@ describe 'IMAP', ->
         imap.fetchHeaders '1:10', ->
           imap.emit 'logout'
           done()
+
+  it 'should list user mailboxes on the server', (done) ->
+    imap = new IMAP this.imapSettings
+    imap.connect (err) ->
+      throw err if err
+      imap.getMailboxes (err, mailboxes) ->
+        expect(mailboxes).to.not.be.empty
+        done()
