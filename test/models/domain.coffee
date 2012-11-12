@@ -5,7 +5,9 @@ expect = require('chai').expect
 assert = require('chai').assert
 
 # Models
+CachedObject = require '../../lib/cachedObject'
 Domain = require '../../models/domain'
+CachedObject.extends Domain
 
 describe 'Domain', ->
 
@@ -17,14 +19,13 @@ describe 'Domain', ->
   it 'should save the domain in the database', (done) ->
     gmail = new Domain
       name: 'gmail.com'
-    gmail.save()
-      .success (domain) ->
-        expect(domain.name).to.equal 'gmail.com'
-        done()
-      .error (err) ->
-        throw err
+    gmail.save (err) ->
+      throw err if err
+      expect(gmail.id).to.not.equal undefined
+      done()
 
   it 'should load a domain from the database', (done) ->
-    Domain.find where: {name: 'gmail.com'}, (domain) ->
-      expect(domain.name).to.equal 'gmail.com'
+    Domain.find {name: 'gmail.com'}, (err, domains) ->
+      throw err if err
+      expect(domains[0].name).to.equal 'gmail.com'
       done()
