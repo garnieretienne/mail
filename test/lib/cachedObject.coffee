@@ -30,6 +30,24 @@ class AnotherClass
 
 CachedObject.extends(AnotherClass)
 
+class Mailbox
+  @hasMany: [Message]
+
+  constructor: (attributes) ->
+    @cachedAttributes = ['name']
+    @[key] = value for key, value of attributes
+
+CachedObject.extends(Mailbox)
+
+class Message
+  @belongsTo: [Mailbox]
+
+  constructor: (attributes) ->
+    @cachedAttributes = ['subject', 'from']
+    @[key] = value for key, value of attributes
+
+CachedObject.extends(Message)
+
 # ---------------------------------------------------------
 
 describe 'Cached Objects >', ->
@@ -113,4 +131,28 @@ describe 'Cached Objects >', ->
                 expect(customObject).to.not.equal undefined
                 expect(savedObject.customClass.name).to.equal customObject.name
                 expect(customObject.name).to.equal object1.name
+                done()
+
+    describe 'belongsTo', ->
+
+      it 'should generate the setter and the getter', (done) ->
+        mailbox = new Mailbox
+          name: 'INBOX'
+        message = new Message
+          from:    'testing@domain.tld'
+          subject: 'Hello Test !'
+        message.setMailbox mailbox, (returnedMailbox) ->
+          expect(message.mailbox).to.not.equal undefined
+          expect(message.mailbox.name).to.equal mailbox.name
+          expect(returnedMailbox.name).to.equal mailbox.name
+          message.save ->
+            expect(mailbox.id).to.not.equal undefined
+            expect(message.id).to.not.equal undefined
+            Message.find message.id, (err, returnedMessage) ->
+              expect(returnedMessage).to.not.equal undefined
+              expect(returnedMessage.mailbox).to.equal undefined
+              returnedMessage.getMailbox (err, attachedMailbox) ->
+                expect(attachedMailbox).to.not.equal undefined
+                expect(returnedMessage.mailbox).to.not.equal undefined
+                expect(returnedMessage.mailbox.name).to.equal mailbox.name
                 done()
