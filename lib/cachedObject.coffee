@@ -1,7 +1,6 @@
 inflection = require('inflection')
 client     = require(__dirname+'/../config/database.coffee')('test')
 
-
 # Cached Object
 # =============
 #
@@ -155,7 +154,8 @@ class CachedObject
     return object
 
   # Find a record from the database and return an object of the extended class.
-  # TODO: extend search methods.
+  # You can spcify an id as integer or an object of criteria.
+  # ex: {name: 'Hello', subname: 'World'} => WHERE "name"="Hello" AND "subname"="World").
   @find: (attributes, callback) ->
     _this = @
     if typeof(attributes) == 'number'
@@ -167,6 +167,23 @@ class CachedObject
           Model = _this.prototype.constructor
           object = Model.build result.rows[0]
           return callback(null, object)
+    else if typeof(attributes) == 'object'
+      tableName = inflection.underscore(inflection.pluralize(_this.prototype.constructor.name))
+      where = []
+      counter = 0
+      for attr of attributes
+        counter++
+        where.push "#{attr}=$#{counter}"
+      query = client.query "SELECT * FROM #{tableName} WHERE #{where.join(' AND ')}",
+        (attributes[key] for key of attributes),
+        (err, result) ->
+          return callback(err, null) if err
+          Model = _this.prototype.constructor
+          objects = []
+          for row in result.rows
+            object = Model.build row
+            objects.push object
+          return callback(null, objects)
     else
       return callback(new Error('Cannot search in the database using these attributes'), null)
 

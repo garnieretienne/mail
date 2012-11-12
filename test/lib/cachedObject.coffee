@@ -93,6 +93,18 @@ describe 'Cached Objects >', ->
           expect(cachedObject.name).to.equal 'Cached Object'
           done()
 
+    it 'should find a cached object using any cached attribute', (done) ->
+      object = new CachedObject()
+      object.name = 'Amazing Cached Object'
+      object.goal = 'Manage cache for object attributes'
+      object.cachedAttributes = ['name', 'goal']
+      object.save ->
+        CachedObject.find {name: 'Amazing Cached Object', goal: 'Manage cache for object attributes'}, (err, cachedObjects) ->
+          throw err if err
+          expect(cachedObjects[0].name).to.equal object.name
+          expect(cachedObjects[0].goal).to.equal object.goal
+          done()
+
   describe 'Object inherited from Cached Object >', ->
 
     it 'should inherit from a Cached Object', ->
