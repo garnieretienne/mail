@@ -1,114 +1,161 @@
 inflection = require('inflection')
-pg = require('pg')
-client = new pg.Client('tcp://testing:testing@localhost/mail_testing');
-client.connect();
+client     = require(__dirname+'/../config/database.coffee')('test')
 
+
+# Cached Object
+# =============
+#
+# CachedObject is designed to extend your models with DAO methods.
+#
+# Special methods
+# ---------------
+# 
+# * extends(model): 
+#     extend the given model with the DAO methods, 
+#     generate getter and setter methods for associed models
+#
+# Class methods
+# -------------
+#
+# * build(attributes): create a new object with the given attributes
+# * find(id):          find an object using its id
+#
+# Instance methods
+# ----------------
+#
+# * save():        save object into database
+# * insert():      (internal method) used by save to create a new record
+# * update():      (internal method) used by save to update an existing record
+# * TODO delete(): delete record from database
+#
+# Associations
+# ------------
+#
+# * hasOne
+# * hasMany
+# * belongsTo (same as 'hasOne')
+#
+# ### hasOne and belongsTo
+#
+# `@hasOne: [Array of model names]`
+# or
+# `@belongsTo: [Array of model names]`
+# generate getter and setter for each models (getModel() and setModel())
+#
+# ### hasMany
+#
+# `@hasMany: [Array of model names]`
+# generate getter and setter for each models (getModels) and setModels
+#
 class CachedObject
 
+  # Extend constructor with DAO methods.
+  # Copy class methods, instance methods and generate getters and setters for associations 
+  # (hasOne, belongsTo and hasMany).
   @extends: (constructor) ->
-    bannedClassMethods = ['extends', 'buildHasOneSetter', 'buildHasOneGetter']
 
-    # Class methods
+    # Non extended class methods:
+    bannedClassMethods = ['extends', 'buildHasOneSetter', 'buildHasOneGetter', 'buildHasManySetter', 'buildHasManyGetter']
+
     for key of CachedObject
       if CachedObject.hasOwnProperty(key) and bannedClassMethods.indexOf(key) == -1
         constructor[key] = CachedObject[key]
 
-    # Instance methods
     for key of CachedObject.prototype
       if CachedObject.prototype.hasOwnProperty(key)
         constructor.prototype[key] = CachedObject.prototype[key]
 
-    # hasOne & belongsTo: build setModel / getModel methods
     if constructor.hasOwnProperty('hasOne')
       for model in constructor.hasOne
         CachedObject.buildHasOneSetter constructor, model
         CachedObject.buildHasOneGetter constructor, model
+
     if constructor.hasOwnProperty('belongsTo')
       for model in constructor.belongsTo
         CachedObject.buildHasOneSetter constructor, model
         CachedObject.buildHasOneGetter constructor, model
 
+    if constructor.hasOwnProperty('hasMany')
+      for model in constructor.hasMany
+        CachedObject.buildHasManySetter constructor, model
+        CachedObject.buildHasManyGetter constructor, model
+
+  # (Internal method) Build setModel() for hasOne and belongsTo associations.
   @buildHasOneSetter: (constructor, model) ->
     modelName = model.name
     constructor.prototype["set#{modelName}"] = (object, callback) ->
       this[inflection.camelize(inflection.underscore(modelName), true)] = object
       return callback(object)
 
-  # Getter
-  # Grab the ID and ask the database
+  # (Internal method) Build setModels() for hasMany associations.
+  @buildHasManySetter: (constructor, model) ->
+    modelName = inflection.pluralize model.name
+    constructor.prototype["set#{modelName}"] = (objects, callback) ->
+      _this = @
+      this[inflection.camelize(inflection.underscore(modelName), true)] = objects
+      for object in objects
+        object[inflection.camelize(inflection.underscore(constructor.name), true)] = _this
+      return callback(objects)
+
+  # (Internal method) Build getModel() for hasOne and belongsTo associations.
   @buildHasOneGetter: (constructor, model) ->
     modelName = model.name
     constructor.prototype["get#{modelName}"] = (callback) ->
       _this = @
-      tableName = inflection.underscore(inflection.pluralize(modelName))
-      id = this[inflection.underscore(modelName)+'_id']
-      if id
-        query = client.query "SELECT * FROM #{tableName} WHERE id=$1",
-          [id],
-          (err, result) ->
-            return callback(err, null) if err
-            Model = model
-            object = Model.build result.rows[0]
-            _this[inflection.camelize(inflection.underscore(modelName), true)] = object
-            return callback(null, object)
-      else 
-        return callback(null, null)
+      attrCamelName = inflection.camelize(inflection.underscore(modelName), true)
+      if _this[attrCamelName]
+        return callback(null, _this[attrCamelName])
+      else
+        tableName = inflection.underscore(inflection.pluralize(modelName))
+        id = this[inflection.underscore(modelName)+'_id']
+        if id
+          query = client.query "SELECT * FROM #{tableName} WHERE id=$1",
+            [id],
+            (err, result) ->
+              return callback(err, null) if err
+              Model = model
+              object = Model.build result.rows[0]
+              _this[attrCamelName] = object
+              return callback(null, object)
+        else 
+          return callback(null, null)
 
+  # (Internal method) Build getModels() for hasMany associations.
+  @buildHasManyGetter: (constructor, model) ->
+    modelName = inflection.pluralize model.name
+    constructor.prototype["get#{modelName}"] = (callback) ->
+      _this = @
+      attrCamelName = inflection.camelize(inflection.underscore(modelName), true)
+      if _this[attrCamelName]
+        return callback(null, _this[attrCamelName])
+      else
+        tableName = inflection.underscore(modelName)
+        foreignKey = inflection.underscore(constructor.name)+'_id'
+        if @id
+          query = client.query "SELECT * FROM #{tableName} WHERE #{foreignKey}=$1",
+            [@id],
+            (err, result) ->
+              return callback(err, null) if err
+              Model = model
+              objects = []
+              for row in result.rows
+                object = Model.build row
+                objects.push object
+              _this[attrCamelName] = objects
+              return callback(null, objects)
+        else 
+          return callback(null, null)
 
+  # (Internal method) build a new object from a model and a list of attributes,
+  # used by find after getting attributes from databases.
   @build: (attributes) ->
     Model = @prototype.constructor
     object = new Model()
     object[key] = value for key, value of attributes
     return object
 
-  # Add an ID
-  # Replace cached_Object with model name
-  # Saved foreign row if not saved
-  save: (callback) ->
-    _this = @
-    if @cachedAttributes
-
-      # Foreign keys
-      # hasOne, belongsTo(TODO)
-      @foreignKeys = []
-      if @constructor.hasOwnProperty('hasOne')
-        for foreignClass in @constructor.hasOne
-          foreignKey = inflection.underscore(foreignClass.name)
-          @foreignKeys.push foreignKey
-      if @constructor.hasOwnProperty('belongsTo')
-        for foreignClass in @constructor.belongsTo
-          foreignKey = inflection.underscore(foreignClass.name)
-          @foreignKeys.push foreignKey
-
-      # For each foreign keys, verify the foreign object is already saved in the database
-      if @foreignKeys.length > 0
-        for column_name in @foreignKeys
-          foreignKey = inflection.camelize(column_name, true)
-          if !_this[foreignKey].id
-            _this[foreignKey].save ->
-              return _this.save callback
-          else
-            @insert callback
-      else
-        @insert callback
-    else
-      return callback(new Error('No cached attributes for this object'))
-
-  # Insert a new row in the database
-  insert: (callback) ->
-    _this = @
-    tableName = inflection.underscore(inflection.pluralize(@constructor.name))
-    insertForeignKeys = if @foreignKeys then (", #{key}_id" for key in @foreignKeys)
-    insertForeignKeyValues = if @foreignKeys then (", #{_this[inflection.camelize(key, true)].id}" for key in @foreignKeys)
-    cachedAttributeNames = ("\"#{attr}\"" for attr in @cachedAttributes)
-    queryString = "INSERT INTO #{tableName}(#{cachedAttributeNames.join(', ')}#{insertForeignKeys}) VALUES(#{("$#{index}" for index in [1..@cachedAttributes.length]).join(', ')}#{insertForeignKeyValues}) RETURNING id"
-    query = client.query queryString, (this[attribute] for attribute in @cachedAttributes), (err, result) =>
-      return callback(err) if err
-      @id = result.rows[0].id
-      return callback(null)
-
-  # Can give an ID
-  # OR (TODO) WHERE ...
+  # Find a record from the database and return an object of the extended class.
+  # TODO: extend search methods.
   @find: (attributes, callback) ->
     _this = @
     if typeof(attributes) == 'number'
@@ -122,5 +169,75 @@ class CachedObject
           return callback(null, object)
     else
       return callback(new Error('Cannot search in the database using these attributes'), null)
+
+  # Save an object into the database.
+  # If the object is a new record, it will be created and an id attribute will be added to the object.
+  # If the object is already in the database and has an id, it will update the existing record
+  # If the given object has non saved associed object needed for foreign keys, 
+  # these attached object are saved before the primary object.
+  save: (callback) ->
+    _this = @
+    if @cachedAttributes
+
+      # Foreign keys:
+      # hasOne, belongsTo.
+      @foreignKeys = []
+      if @constructor.hasOwnProperty('hasOne')
+        for foreignClass in @constructor.hasOne
+          foreignKey = inflection.underscore(foreignClass.name)
+          @foreignKeys.push foreignKey
+      if @constructor.hasOwnProperty('belongsTo')
+        for foreignClass in @constructor.belongsTo
+          foreignKey = inflection.underscore(foreignClass.name)
+          @foreignKeys.push foreignKey
+
+      # For each foreign keys, verify the foreign object is already saved in the database.
+      if @foreignKeys.length > 0
+        for column_name in @foreignKeys
+          foreignKey = inflection.camelize(column_name, true)
+          if !_this[foreignKey].id
+            _this[foreignKey].save ->
+              return _this.save callback
+          else
+            if !_this.id
+              @insert callback
+            else
+              @update callback
+      else
+        if !_this.id
+          @insert callback
+        else
+          @update callback
+
+    else
+      return callback(new Error('No cached attributes for this object'))
+
+  # (Internal method) Insert a new row in the database, used by save() method.
+  insert: (callback) ->
+    _this = @
+    tableName = inflection.underscore(inflection.pluralize(@constructor.name))
+    insertForeignKeys = if @foreignKeys then (", #{key}_id" for key in @foreignKeys)
+    insertForeignKeyValues = if @foreignKeys then (", #{_this[inflection.camelize(key, true)].id}" for key in @foreignKeys)
+    cachedAttributeNames = ("\"#{attr}\"" for attr in @cachedAttributes)
+    queryString = "INSERT INTO #{tableName}(#{cachedAttributeNames.join(', ')}#{insertForeignKeys}) VALUES(#{("$#{index}" for index in [1..@cachedAttributes.length]).join(', ')}#{insertForeignKeyValues}) RETURNING id"
+    query = client.query queryString, (this[attribute] for attribute in @cachedAttributes), (err, result) =>
+      return callback(err) if err
+      @id = result.rows[0].id
+      return callback(null)
+
+  # (Internal method) Update a record, used by the save() method
+  update: (callback) ->
+    _this = @
+    tableName = inflection.underscore(inflection.pluralize(@constructor.name))
+    insertForeignKeys = if @foreignKeys then (", #{key}_id" for key in @foreignKeys)
+    insertForeignKeyValues = if @foreignKeys then (", #{_this[inflection.camelize(key, true)].id}" for key in @foreignKeys)
+    cachedAttributeNames = ("\"#{attr}\"" for attr in @cachedAttributes)  
+    queryString = "UPDATE #{tableName} SET (#{cachedAttributeNames.join(', ')}#{insertForeignKeys}) = (#{("$#{index}" for index in [2..@cachedAttributes.length+1]).join(', ')}#{insertForeignKeyValues}) WHERE id=$1"
+    valuesStrings = [_this.id]
+    for attribute in @cachedAttributes
+      valuesStrings.push(this[attribute])
+    query = client.query queryString, valuesStrings, (err, result) =>
+      return callback(err) if err
+      return callback(null)
 
 module.exports = CachedObject

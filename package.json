@@ -17,7 +17,9 @@
     "connect-redis": "~1.4.4",
     "nodiak": "0.0.7",
     "mimelib": "~0.2.7",
-    "sequelize": "~1.6.0-alpha-2"
+    "sequelize": "~1.6.0-alpha-3",
+    "pg": "~0.8.7",
+    "inflection": "~1.2.3"
   },
   "devDependencies": {
     "packjs": "0.0.6",
