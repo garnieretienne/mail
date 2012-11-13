@@ -202,11 +202,11 @@ class CachedObject
       if @constructor.hasOwnProperty('hasOne')
         for foreignClass in @constructor.hasOne
           foreignKey = inflection.underscore(foreignClass.name)
-          @foreignKeys.push foreignKey
+          @foreignKeys.push foreignKey if _this[inflection.camelize(foreignKey, true)]
       if @constructor.hasOwnProperty('belongsTo')
         for foreignClass in @constructor.belongsTo
           foreignKey = inflection.underscore(foreignClass.name)
-          @foreignKeys.push foreignKey
+          @foreignKeys.push foreignKey if _this[inflection.camelize(foreignKey, true)]
 
       # For each foreign keys, verify the foreign object is already saved in the database.
       if @foreignKeys.length > 0
