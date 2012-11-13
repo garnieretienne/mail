@@ -1,13 +1,11 @@
 # Testing libraries
 Testing = require '../_helper.js'
 should  = require('chai').should()
-expect = require('chai').expect
-assert = require('chai').assert
+expect  = require('chai').expect
+assert  = require('chai').assert
 
 # Models
-CachedObject = require '../../lib/cachedObject'
-Domain = require '../../models/domain'
-CachedObject.extends Domain
+Domain = require('../../models/models').Domain
 
 describe 'Domain', ->
 
