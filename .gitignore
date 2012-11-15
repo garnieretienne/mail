@@ -8,6 +8,9 @@ builtAssets/*
 # Ignore node dependencies for this app
 node_modules
 
+# Ignore generated docs
+docs/docs
+
 # General node components
 lib-cov
 *.seed
