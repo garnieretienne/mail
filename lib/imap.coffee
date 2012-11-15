@@ -111,5 +111,5 @@ class IMAP
   #    return callback() if callback
   # /////////////////////////////////////////////////////////////////////
 
-IMAP.prototype.__proto__ = EventEmitter.prototype;
+IMAP.prototype.__proto__ = EventEmitter.prototype
 module.exports = IMAP
