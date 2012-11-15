@@ -2,20 +2,25 @@ Testing = require '../_helper.js'
 should  = require('chai').should()
 expect = require('chai').expect
 assert = require('chai').assert
-Mailbox = require '../../models/mailbox'
+
+# Models
+Mailbox = require(__dirname+'/../../models/models').Mailbox
+
+# Sequelized Models
+# SequelizedModels  = require(__dirname + '/../../models/sequelize/sequelizedModels')
 
 describe 'Mailbox', ->
 
   it 'should retrive some attributes', ->
     mailbox = new Mailbox
       name:        '[Gmail]'
-      uidvalidity: 123456789
+      uidValidity: 123456789
       selectable:  false
       messages:
         total:     3000
         unread:    20
     expect(mailbox.name).to.equal '[Gmail]'
-    expect(mailbox.uidvalidity).to.equal 123456789
+    expect(mailbox.uidValidity).to.equal 123456789
     expect(mailbox.selectable).to.equal false
     expect(mailbox.messages.total).to.equal 3000
     expect(mailbox.messages.unread).to.equal 20
@@ -34,20 +39,30 @@ describe 'Mailbox', ->
   it 'should save the mailbox into database', (done) ->
     inbox = new Mailbox
       name:        'INBOX'
-      uidvalidity: 123456789
+      uidValidity: 123456789
       messages:
         total:     3000
         unread:    20
-    inbox.save()
-      .success (mailbox) ->
-        expect(mailbox.name).to.equal 'INBOX'
-        done()
-      .error (err) ->
-        throw err
+    inbox.save (err) ->
+      throw err if err
+      expect(inbox.id).to.not.equal undefined
+      done()
 
   it 'should load a mailbox from the database', (done) ->
-    Mailbox.find where: {name: 'INBOX'}, (mailbox) ->
+    Mailbox.find {name: 'INBOX'}, (err, results) ->
+      throw err if err
+      mailbox = results[results.length-1]
       expect(mailbox.name).to.equal 'INBOX'
       done()
 
-  # it 'should make a mailbox with a parent mailbox', (done) ->
+   it 'should make a mailbox with a parent mailbox', (done) ->
+    mailboxParent = new Mailbox
+      name:        'Parent Mailbox'
+      uidValidity: 123456789
+      selectable:  false
+    mailboxChild = new Mailbox
+      name:        'Child Mailbox'
+      uidValidity: 1234567890
+    mailboxChild.setMailbox mailboxParent, ->
+      expect(mailboxChild.mailbox.name).to.equal 'Parent Mailbox'
+      done()

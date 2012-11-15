@@ -1,37 +1,72 @@
-crypto = require('crypto')
-riak = require('nodiak').getClient()
+# riak    = require('nodiak').getClient()
+crypto  = require('crypto')
 mimelib = require('mimelib')
 
+# Sequelized Models
+# SequelizedModels  = require(__dirname + '/sequelize/sequelizedModels')
+# SequelizedMessage = SequelizedModels.Message
 
 class Message
+  # @prototype: SequelizedMessage.build()
+  # @find: (attributes, callback) ->
+  #   _this = @
+  #   SequelizedMessage.find(attributes).success (sequelizedMessage) ->
+  #     if sequelizedMessage
+  #       message = SequelizedModels.convert(sequelizedMessage, Message)
+  #       return callback(message)
+  #     else return callback(null)
+  # @sync: (attributes) ->
+  #   return SequelizedMessage.sync attributes
 
   constructor: (attributes) ->
-    @[key] = value for key, value of attributes
-    @setDefaults()
+    @cachedAttributes = [ 'uid', 'seqno', 'json' ]
+    if attributes
+      @[key] = value for key, value of attributes
+      @setDefaults()
 
-  # Create a new Message object from a MailParser Object and an imapFields hash
-  # ImapFields must contain:
-  #  - uid
-  #  - seqno
-  #  - flags
-  #  - date (when the message was received)
-  # TODO: manage errors
-  @fromMailParser: (parsedMessage, imapFields, callback) ->
-    message = new Message
-      seqno: imapFields.seqno,
-      uid: imapFields.uid,
-      subject: mimelib.parseMimeWords(parsedMessage.subject),
-      from:
-        name: parsedMessage.from[0].name,
-        address: parsedMessage.from[0].address,
-      to: Message.parseMailParserHeaderFieldTo(parsedMessage.to),
-      date: imapFields.date,
-      sample: Message.generateSample(parsedMessage.text),
-      body:
-        text: parsedMessage.text,
-        html: parsedMessage.html
-      flags: imapFields.flags
-    callback(message)
+  # Set default values
+  setDefaults: ->
+    @from.md5 = Message.generateMD5Hash(@from.address) if not @from.md5
+    @sample = Message.generateSample(@body.text) if not @sample and @body
+
+  toJSON: ->
+    object = 
+      seqno: @seqno
+      uid: @uid
+      subject: @subject
+      from: @from
+      to: @to
+      date: @date
+      flags: @flags
+    return JSON.stringify(object)
+
+  # Alias for toJSON
+  json: ->
+    @toJSON()
+
+  # # Create a new Message object from a MailParser Object and an imapFields hash
+  # # ImapFields must contain:
+  # #  - uid
+  # #  - seqno
+  # #  - flags
+  # #  - date (when the message was received)
+  # # TODO: manage errors
+  # @fromMailParser: (parsedMessage, imapFields, callback) ->
+  #   message = new Message
+  #     seqno: imapFields.seqno,
+  #     uid: imapFields.uid,
+  #     subject: mimelib.parseMimeWords(parsedMessage.subject),
+  #     from:
+  #       name: parsedMessage.from[0].name,
+  #       address: parsedMessage.from[0].address,
+  #     to: Message.parseMailParserHeaderFieldTo(parsedMessage.to),
+  #     date: imapFields.date,
+  #     sample: Message.generateSample(parsedMessage.text),
+  #     body:
+  #       text: parsedMessage.text,
+  #       html: parsedMessage.html
+  #     flags: imapFields.flags
+  #   callback(message)
 
   # Create a new message from an ImapMessage object (node-imap)
   @fromImapMessage: (imapMessage, callback) ->
@@ -48,28 +83,28 @@ class Message
       parts: Message.mapPartIDs(imapMessage.structure)
     callback(message)
 
-  # Get a message from Riak database using the UID
-  @getByUID: (userId, mailboxName, uid, callback) ->
-    userBucket = riak.bucket "#{userId}:#{mailboxName}"
-    userBucket.objects.get uid, (err, obj) ->
-      return callback err, new Message(obj.data)
+  # # # Get a message from Riak database using the UID
+  # # @getByUID: (userId, mailboxName, uid, callback) ->
+  # #   userBucket = riak.bucket "#{userId}:#{mailboxName}"
+  # #   userBucket.objects.get uid, (err, obj) ->
+  # #     return callback err, new Message(obj.data)
 
-  # Get a message from the Riak database usng the sequence number
-  @getBySeqno: (userId, mailboxName, seqno, callback) ->
-    userBucket = riak.bucket "#{userId}:#{mailboxName}"
-    keys = []
-    userBucket.search.twoi seqno, 'seqno', (err, key) ->
-      return callback(err, null) if err or key.length == 0
-      Message.getByUID userId, mailboxName, key, (err, message) ->
-        return callback(err, message)
+  # # # Get a message from the Riak database usng the sequence number
+  # # @getBySeqno: (userId, mailboxName, seqno, callback) ->
+  # #   userBucket = riak.bucket "#{userId}:#{mailboxName}"
+  # #   keys = []
+  # #   userBucket.search.twoi seqno, 'seqno', (err, key) ->
+  # #     return callback(err, null) if err or key.length == 0
+  # #     Message.getByUID userId, mailboxName, key, (err, message) ->
+  # #       return callback(err, message)
 
-  # Get all messages for the given user in the given mailbox
-  @all: (userId, mailboxName, callback) ->
-    userBucket = riak.bucket "#{userId}:#{mailboxName}"
+  # # # Get all messages for the given user in the given mailbox
+  # # @all: (userId, mailboxName, callback) ->
+  # #   userBucket = riak.bucket "#{userId}:#{mailboxName}"
 
-  # Parse header field 'to' from a message parsed using 'mailparser'
-  @parseMailParserHeaderFieldTo: (toField) ->
-    toField.map (element, index, object) -> element.address
+  # # # Parse header field 'to' from a message parsed using 'mailparser'
+  # # @parseMailParserHeaderFieldTo: (toField) ->
+  # #   toField.map (element, index, object) -> element.address
 
   # Parse header field 'from' from an ImapMessage field
   # TODO: better support for 
@@ -116,17 +151,33 @@ class Message
   @generateMD5Hash: (email) ->
     crypto.createHash('md5').update(email).digest('hex')
 
-  # Set default values
-  setDefaults: ->
-    @from.md5 = Message.generateMD5Hash(@from.address) if not @from.md5
-    @sample = Message.generateSample(@body.text) if not @sample and @body
+  # # # Save a new message into Riak
+  # # save: (userId, mailboxName, callback) ->
+  # #   userBucket = riak.bucket "#{userId}:#{mailboxName}"
+  # #   rObject = userBucket.object.new @uid, @
+  # #   rObject.addToIndex 'seqno', @seqno
+  # #   userBucket.objects.save rObject, (err, obj) ->
+  # #     return callback(err) if callback
 
-  # Save a new message into Riak
-  save: (userId, mailboxName, callback) ->
-    userBucket = riak.bucket "#{userId}:#{mailboxName}"
-    rObject = userBucket.object.new @uid, @
-    rObject.addToIndex 'seqno', @seqno
-    userBucket.objects.save rObject, (err, obj) ->
-      return callback(err) if callback
+  # # Cache a message into the database AND its attributes into riak
+  # cache: (callback) ->
+  #   _this = @
+  #   @save()
+  #     .success (sequelizedMessage) ->
+  #       sequelizedMessage.getMailbox()
+  #         .success (sequelizedMailbox) ->
+  #           sequelizedMailbox.getAccount()
+  #             .success (sequelizedAccount) ->
+  #               accountId = sequelizedAccount.id
+  #               userBucket = riak.bucket _this.
+  #               rObject = userBucket.object.new accountId, _this #TODO: cachedAttributes
+  #               userBucket.objects.save rObject, (err, obj) ->
+  #                 return callback(err)
+  #             .error (err) ->
+  #               return callback(err)
+  #         .error (err) ->
+  #           return callback(err)
+  #     .error (err) ->
+  #       return callback(err)
 
 module.exports = Message

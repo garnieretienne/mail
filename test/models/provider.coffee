@@ -16,17 +16,17 @@ describe 'Association and Sync for Provider and Domain,', ->
     beforeEach ->
       @provider = new Provider
         name: 'Local Mail'
-        imap_host: 'localhost'
-        imap_port: 993
-        imap_secure: true
-        smtp_host: 'localhost'
-        smtp_port: 465
-        smtp_secure: true
+        imapHost: 'localhost'
+        imapPort: 993
+        imapSecure: true
+        smtpHost: 'localhost'
+        smtpPort: 465
+        smtpSecure: true
 
     it 'should retrieve some attributes', ->
       expect(@provider.name).to.equal 'Local Mail'
-      expect(@provider.imap_host).to.equal 'localhost'
-      expect(@provider.smtp_host).to.equal 'localhost'
+      expect(@provider.imapHost).to.equal 'localhost'
+      expect(@provider.smtpHost).to.equal 'localhost'
 
     it 'should save the provider into the database', (done) ->
       _this = @
@@ -48,6 +48,8 @@ describe 'Association and Sync for Provider and Domain,', ->
           gmailDNS.save ->
             googleDNS.save ->
               Provider.find _this.provider.id, (err, provider) ->
+                expect(provider.name).to.equal 'Local Mail'
+                expect(provider.imapHost).to.equal 'localhost'
                 provider.getDomains (err, retrievedDomains) ->
                   throw err if err
                   expect(retrievedDomains[0].name).to.equal 'gmail.com'
@@ -63,6 +65,7 @@ describe 'Association and Sync for Provider and Domain,', ->
           done()
 
     # TODO: parse email address to get the domain name in account
+    
     # it 'should search for a provider given an email address', (done) ->
     #   provider = @provider
     #   provider.save().success ->

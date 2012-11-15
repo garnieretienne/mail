@@ -1,5 +1,5 @@
 inflection = require('inflection')
-client     = require(__dirname+'/../config/database.coffee')('test')
+client     = require(__dirname+'/../config/database.coffee')()
 
 # Cached Object
 # =============
@@ -106,7 +106,7 @@ class CachedObject
         return callback(null, _this[attrCamelName])
       else
         tableName = inflection.underscore(inflection.pluralize(modelName))
-        id = this[inflection.underscore(modelName)+'_id']
+        id = this[inflection.camelize(inflection.underscore(modelName)+'_id', true)]
         if id
           query = client.query "SELECT * FROM #{tableName} WHERE id=$1",
             [id],
@@ -147,10 +147,13 @@ class CachedObject
 
   # (Internal method) build a new object from a model and a list of attributes,
   # used by find after getting attributes from databases.
+  # Support for JSON storage: if json attribute is given (loaded from database), 
+  # its values will be used to create the returned object.
   @build: (attributes) ->
     Model = @prototype.constructor
     object = new Model()
-    object[key] = value for key, value of attributes
+    (object[inflection.camelize(key, true)] = value if key != 'json') for key, value of attributes
+    object[inflection.camelize(key, true)] = value for key, value of JSON.parse(attributes.json) if attributes.json
     return object
 
   # Find a record from the database and return an object of the extended class.
@@ -173,7 +176,7 @@ class CachedObject
       counter = 0
       for attr of attributes
         counter++
-        where.push "#{attr}=$#{counter}"
+        where.push "#{inflection.underscore(attr)}=$#{counter}"
       query = client.query "SELECT * FROM #{tableName} WHERE #{where.join(' AND ')}",
         (attributes[key] for key of attributes),
         (err, result) ->
@@ -213,7 +216,8 @@ class CachedObject
         for column_name in @foreignKeys
           foreignKey = inflection.camelize(column_name, true)
           if !_this[foreignKey].id
-            _this[foreignKey].save ->
+            _this[foreignKey].save (err) ->
+              return callback(err) if err
               return _this.save callback
           else
             if !_this.id
@@ -235,9 +239,10 @@ class CachedObject
     tableName = inflection.underscore(inflection.pluralize(@constructor.name))
     insertForeignKeys = if @foreignKeys then (", #{key}_id" for key in @foreignKeys)
     insertForeignKeyValues = if @foreignKeys then (", #{_this[inflection.camelize(key, true)].id}" for key in @foreignKeys)
-    cachedAttributeNames = ("\"#{attr}\"" for attr in @cachedAttributes)
+    cachedAttributeNames = ("\"#{inflection.underscore(attr)}\"" for attr in @cachedAttributes)
+    cachedAttributeValues = ((if typeof(this[attribute]) == 'function' then this[attribute]() else this[attribute]) for attribute in @cachedAttributes)
     queryString = "INSERT INTO #{tableName}(#{cachedAttributeNames.join(', ')}#{insertForeignKeys}) VALUES(#{("$#{index}" for index in [1..@cachedAttributes.length]).join(', ')}#{insertForeignKeyValues}) RETURNING id"
-    query = client.query queryString, (this[attribute] for attribute in @cachedAttributes), (err, result) =>
+    query = client.query queryString, cachedAttributeValues, (err, result) =>
       return callback(err) if err
       @id = result.rows[0].id
       return callback(null)
@@ -248,12 +253,15 @@ class CachedObject
     tableName = inflection.underscore(inflection.pluralize(@constructor.name))
     insertForeignKeys = if @foreignKeys then (", #{key}_id" for key in @foreignKeys)
     insertForeignKeyValues = if @foreignKeys then (", #{_this[inflection.camelize(key, true)].id}" for key in @foreignKeys)
-    cachedAttributeNames = ("\"#{attr}\"" for attr in @cachedAttributes)  
+    cachedAttributeNames = ("\"#{inflection.underscore(attr)}\"" for attr in @cachedAttributes)  
     queryString = "UPDATE #{tableName} SET (#{cachedAttributeNames.join(', ')}#{insertForeignKeys}) = (#{("$#{index}" for index in [2..@cachedAttributes.length+1]).join(', ')}#{insertForeignKeyValues}) WHERE id=$1"
-    valuesStrings = [_this.id]
+    cachedAttributeValues = [_this.id]
     for attribute in @cachedAttributes
-      valuesStrings.push(this[attribute])
-    query = client.query queryString, valuesStrings, (err, result) =>
+      if typeof(this[attribute]) == 'function'
+        cachedAttributeValues.push(this[attribute]())
+      else
+        cachedAttributeValues.push(this[attribute])
+    query = client.query queryString, cachedAttributeValues, (err, result) -> 
       return callback(err) if err
       return callback(null)
 

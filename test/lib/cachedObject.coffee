@@ -30,23 +30,23 @@ class AnotherClass
 
 CachedObject.extends(AnotherClass)
 
-class Mailbox
+class MailboxTest
 
   constructor: (attributes) ->
     @cachedAttributes = ['name']
     @[key] = value for key, value of attributes
 
-class Message
+class MessageTest
 
   constructor: (attributes) ->
     @cachedAttributes = ['subject', 'from']
     @[key] = value for key, value of attributes
 
-Mailbox.hasMany = [Message]
-Message.belongsTo = [Mailbox]
+MailboxTest.hasMany = [MessageTest]
+MessageTest.belongsTo = [MailboxTest]
 
-CachedObject.extends(Mailbox)
-CachedObject.extends(Message)
+CachedObject.extends(MailboxTest)
+CachedObject.extends(MessageTest)
 
 # ---------------------------------------------------------
 
@@ -174,56 +174,60 @@ describe 'Cached Objects >', ->
     describe 'belongsTo >', ->
 
       it 'should generate the setter and the getter', (done) ->
-        mailbox = new Mailbox
+        mailbox = new MailboxTest
           name: 'INBOX'
-        message = new Message
+        message = new MessageTest
           from:    'testing@domain.tld'
           subject: 'Hello Test !'
-        message.setMailbox mailbox, (returnedMailbox) ->
-          expect(message.mailbox).to.not.equal undefined
-          expect(message.mailbox.name).to.equal mailbox.name
+        message.setMailboxTest mailbox, (returnedMailbox) ->
+          expect(message.mailboxTest).to.not.equal undefined
+          expect(message.mailboxTest.name).to.equal mailbox.name
           expect(returnedMailbox.name).to.equal mailbox.name
-          message.save ->
+          message.save (err) ->
+            throw err if err
             expect(mailbox.id).to.not.equal undefined
             expect(message.id).to.not.equal undefined
-            Message.find message.id, (err, returnedMessage) ->
+            MessageTest.find message.id, (err, returnedMessage) ->
               expect(returnedMessage).to.not.equal undefined
               expect(returnedMessage.mailbox).to.equal undefined
-              returnedMessage.getMailbox (err, attachedMailbox) ->
+              returnedMessage.getMailboxTest (err, attachedMailbox) ->
                 expect(attachedMailbox).to.not.equal undefined
-                expect(returnedMessage.mailbox).to.not.equal undefined
-                expect(returnedMessage.mailbox.name).to.equal mailbox.name
+                expect(returnedMessage.mailboxTest).to.not.equal undefined
+                expect(returnedMessage.mailboxTest.name).to.equal mailbox.name
                 done()
 
     describe 'hasMany >', ->
 
       it 'should generate the setter and the getter', (done) ->
-        mailbox = new Mailbox
+        mailbox = new MailboxTest
           name: 'INBOX'
-        message1 = new Message
+        message1 = new MessageTest
           from:    'testing@domain.tld'
           subject: 'Hello Test !'
-        message2 = new Message
+        message2 = new MessageTest
           from:    'admin@domain.tld'
           subject: 'Reseting your password'
-        mailbox.setMessages [message1, message2], (messages) ->
+        mailbox.setMessageTests [message1, message2], (messages) ->
           expect(messages[0].subject).to.equal message1.subject
           expect(messages[1].subject).to.equal message2.subject
-          expect(message1.mailbox.name).to.equal mailbox.name
-          expect(message2.mailbox.name).to.equal mailbox.name
-          message1.getMailbox (err, attachedMailbox) ->
+          expect(message1.mailboxTest.name).to.equal mailbox.name
+          expect(message2.mailboxTest.name).to.equal mailbox.name
+          message1.getMailboxTest (err, attachedMailbox) ->
             expect(attachedMailbox.name).to.equal mailbox.name
-            mailbox.save ->
+            mailbox.save (err) ->
+              throw err if err
               expect(mailbox.id).to.not.equal undefined
               expect(message1.id).to.equal undefined
               expect(message2.id).to.equal undefined
-              message1.save ->
-                message2.save ->
+              message1.save (err) ->
+                throw err if err
+                message2.save (err) ->
+                  throw err if err
                   expect(message1.id).to.not.equal undefined
                   expect(message2.id).to.not.equal undefined
-                  Mailbox.find mailbox.id, (err, returnedMailbox) ->
+                  MailboxTest.find mailbox.id, (err, returnedMailbox) ->
                     expect(returnedMailbox).to.not.equal undefined
-                    returnedMailbox.getMessages (err, attachedMessages) ->
+                    returnedMailbox.getMessageTests (err, attachedMessages) ->
                       expect(attachedMessages[0].subject).to.equal 'Hello Test !'
                       expect(attachedMessages[1].subject).to.equal 'Reseting your password'
                       done()
