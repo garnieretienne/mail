@@ -6,10 +6,11 @@ assert = require('chai').assert
 # Models
 Mailbox = require(__dirname+'/../../models/models').Mailbox
 
-# Sequelized Models
-# SequelizedModels  = require(__dirname + '/../../models/sequelize/sequelizedModels')
-
 describe 'Mailbox', ->
+
+  before (done) ->
+    Testing.resetAllDatabases ->
+      done()
 
   it 'should retrive some attributes', ->
     mailbox = new Mailbox

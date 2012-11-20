@@ -12,31 +12,32 @@ describe 'Message', ->
 
   before (done) ->
     _this = @
-    @loremIpsum = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
-    @attr = 
-      seqno: 1111
-      uid: 111
-      subject: 'Testing Email',
-      from: {
-        name: 'Etienne Garnier',
-        address: 'etienne.garnier@domain.tld'
-      },
-      to: ['me@domain.tld', 'another.person@domain.tld'],
-      date: 'Mon, 17 Sep 2012 09:16:06 GMT',
-      body: {
-        text: this.loremIpsum,
-        html: "<p>#{this.loremIpsum}</p>"
-      }
-      flags: ['Seen']
-    account = new Account
-      username: Testing.imapSettings.username
-      password: Testing.imapSettings.password
-    @mailbox = new Mailbox
-      name: 'INBOX'
-    @mailbox.setAccount account, ->
-      _this.mailbox.save (err) ->
-        throw err if err
-        done()
+    Testing.resetAllDatabases ->
+      _this.loremIpsum = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
+      _this.attr = 
+        seqno: 1111
+        uid: 111
+        subject: 'Testing Email',
+        from: {
+          name: 'Etienne Garnier',
+          address: 'etienne.garnier@domain.tld'
+        },
+        to: ['me@domain.tld', 'another.person@domain.tld'],
+        date: 'Mon, 17 Sep 2012 09:16:06 GMT',
+        body: {
+          text: _this.loremIpsum,
+          html: "<p>#{_this.loremIpsum}</p>"
+        }
+        flags: ['Seen']
+      account = new Account
+        username: Testing.imapSettings.username
+        password: Testing.imapSettings.password
+      _this.mailbox = new Mailbox
+        name: 'INBOX'
+      _this.mailbox.setAccount account, ->
+        _this.mailbox.save (err) ->
+          throw err if err
+          done()
 
   it 'should create a new message and retrieve its attributes', ->
     message = new Message(@attr)

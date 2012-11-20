@@ -52,6 +52,12 @@ CachedObject.extends(MessageTest)
 
 describe 'Cached Objects >', ->
 
+  before (done) ->
+    Testing.resetDatabase 'cached_objects', ->
+      Testing.resetDatabase 'message_tests', ->
+        Testing.resetDatabase 'mailbox_tests', ->
+          done()
+
   describe 'Pure Cached Object >', ->
 
     it 'should create a cached object', ->

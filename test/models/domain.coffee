@@ -9,6 +9,10 @@ Domain = require('../../models/models').Domain
 
 describe 'Domain', ->
 
+  before (done) ->
+    Testing.resetAllDatabases ->
+      done()
+
   it 'should create a new domain', ->
     gmail = new Domain
       name: 'gmail.com'

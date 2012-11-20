@@ -13,6 +13,10 @@ describe 'Association and Sync for Provider and Domain,', ->
 
   describe 'Provider', ->
 
+    before (done) ->
+      Testing.resetAllDatabases ->
+        done()
+
     beforeEach ->
       @provider = new Provider
         name: 'Local Mail'

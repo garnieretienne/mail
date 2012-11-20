@@ -14,23 +14,24 @@ describe 'Account', ->
 
   before (done) ->
     _this = @
-    @account = new Account
-      username: Testing.imapSettings.username
-      password: Testing.imapSettings.password
-    gmailDNS = new Domain
-      name: 'gmail.com'
-    @provider = new Provider
-      name: 'Local Mail'
-      imapHost: 'localhost'
-      imapPort: 993
-      imapSecure: true
-      smtpHost: 'localhost'
-      smtpPort: 465
-      smtpSecure: true
-    @provider.setDomains [gmailDNS], ->
-      _this.provider.save ->
-        gmailDNS.save ->
-          done()
+    Testing.resetAllDatabases ->
+      _this.account = new Account
+        username: Testing.imapSettings.username
+        password: Testing.imapSettings.password
+      gmailDNS = new Domain
+        name: 'gmail.com'
+      _this.provider = new Provider
+        name: 'Local Mail'
+        imapHost: 'localhost'
+        imapPort: 993
+        imapSecure: true
+        smtpHost: 'localhost'
+        smtpPort: 465
+        smtpSecure: true
+      _this.provider.setDomains [gmailDNS], ->
+        _this.provider.save ->
+          gmailDNS.save ->
+            done()
 
   it 'should retrieve the username (alias for email address) but not the password', ->
     expect(@account.emailAddress).to.equal Testing.imapSettings.username
