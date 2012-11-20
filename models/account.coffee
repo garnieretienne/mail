@@ -125,11 +125,13 @@ class Account
 
   # List the mailboxes from the IMAP server
   getIMAPMailboxes: (callback) ->
+    Mailbox = @constructor.hasMany[0]
     if !@imap 
       err = new Error 'Not connected to any IMAP server'
       return callback(err, null)
     @imap.getMailboxes (err, IMAPMailboxes) ->
-      return callback(err, IMAPMailboxes)
+      Mailbox.convertIMAPMailboxes IMAPMailboxes, (mailboxes) ->
+        return callback(err, mailboxes)
 
 Account.prototype.__proto__ = EventEmitter.prototype
 module.exports = Account

@@ -121,35 +121,33 @@ describe 'Account', ->
     _this = @
     @account.connect (err) ->
       throw err if err
-      _this.account.getIMAPMailboxes (err, IMAPMailboxes) ->
+      _this.account.getIMAPMailboxes (err, mailboxes) ->
         thow err if err
-        Mailbox.convertIMAPMailboxes IMAPMailboxes, (mailboxes) ->
-          expect(mailboxes[0].name).to.equal 'Trash'
-          expect(mailboxes[0].selectable).to.be.true
-          expect(mailboxes[1].name).to.equal 'Parent'
-          expect(mailboxes[1].selectable).to.be.true
-          expect(mailboxes[2].name).to.equal 'Children'
-          expect(mailboxes[2].selectable).to.be.true
-          expect(mailboxes[2].mailbox.name).to.equal 'Parent'
-          expect(mailboxes[3].name).to.equal 'INBOX'
-          expect(mailboxes[3].selectable).to.be.true
-          done()
+        expect(mailboxes[0].name).to.equal 'Trash'
+        expect(mailboxes[0].selectable).to.be.true
+        expect(mailboxes[1].name).to.equal 'Parent'
+        expect(mailboxes[1].selectable).to.be.true
+        expect(mailboxes[2].name).to.equal 'Children'
+        expect(mailboxes[2].selectable).to.be.true
+        expect(mailboxes[2].mailbox.name).to.equal 'Parent'
+        expect(mailboxes[3].name).to.equal 'INBOX'
+        expect(mailboxes[3].selectable).to.be.true
+        done()
 
   it 'should suscribe to a mailbox', (done) ->
     _this = @
     @account.connect (err) ->
       throw err if err
-      _this.account.getIMAPMailboxes (err, IMAPMailboxes) ->
+      _this.account.getIMAPMailboxes (err, mailboxes) ->
         thow err if err
-        Mailbox.convertIMAPMailboxes IMAPMailboxes, (mailboxes) ->
-          mailbox = null
-          for _mailbox in mailboxes
-            mailbox = _mailbox if _mailbox.name == 'INBOX'
-          mailbox.setAccount _this.account, ->
-            expect(mailbox.account.emailAddress).to.equal Testing.imapSettings.username
-            mailbox.save ->
-              expect(mailbox.id).to.not.equal undefined
-              done()
+        mailbox = null
+        for _mailbox in mailboxes
+          mailbox = _mailbox if _mailbox.name == 'INBOX'
+        mailbox.setAccount _this.account, ->
+          expect(mailbox.account.emailAddress).to.equal Testing.imapSettings.username
+          mailbox.save ->
+            expect(mailbox.id).to.not.equal undefined
+            done()
 
   it 'should fully synchronize the account', (done) ->
     _this = @
