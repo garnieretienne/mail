@@ -173,12 +173,22 @@ class CachedObject
     else if typeof(attributes) == 'object'
       tableName = inflection.underscore(inflection.pluralize(_this.prototype.constructor.name))
       where = []
-      counter = 0
-      for attr of attributes
-        counter++
-        where.push "#{inflection.underscore(attr)}=$#{counter}"
-      query = client.query "SELECT * FROM #{tableName} WHERE #{where.join(' AND ')}",
-        (attributes[key] for key of attributes),
+      queryString = "SELECT * FROM #{tableName}"
+      queryParameters = []
+      
+      if attributes.where
+        counter = 0
+        for attr of attributes.where
+          counter++
+          where.push "#{inflection.underscore(attr)}=$#{counter}"
+        queryString += " WHERE #{where.join(' AND ')}"
+        queryParameters = (attributes.where[key] for key of attributes.where)
+
+      if attributes.limit
+        queryString += " LIMIT #{attributes.limit}"
+      
+      query = client.query queryString,
+        queryParameters,
         (err, result) ->
           return callback(err, null) if err
           Model = _this.prototype.constructor
