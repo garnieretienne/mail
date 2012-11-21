@@ -1,5 +1,6 @@
 IMAP         = require('../lib/imap')
 EventEmitter = require("events").EventEmitter
+async        = require("async")
 
 class Account
 
@@ -108,7 +109,6 @@ class Account
         message.setMailbox _this.selectedMailbox, ->
           message.save (err) ->
             return callback(err) if err
-            #fetchEvents.emit('error', err) if err
             _this.emit 'message:new', message
             processed = processed + 1
             if processed == maxSeqno
@@ -132,6 +132,27 @@ class Account
     @imap.getMailboxes (err, IMAPMailboxes) ->
       Mailbox.convertIMAPMailboxes IMAPMailboxes, (mailboxes) ->
         return callback(err, mailboxes)
+
+  # Subscribe to mailboxes: save the mailboxes and synchronize them
+  # Event methods:
+  #  - 'mailbox:new'
+  #  - 'error'
+  subscribe: (mailboxes, callback) ->
+    _this = @
+    if !@imap
+      err = new Error 'Not connected to any IMAP server'
+      return callback(err)
+    @setMailboxes mailboxes, ->
+      _this.save (err) ->
+        return callback(err) if err
+        async.forEachSeries mailboxes
+          , (mailbox, next) ->
+            mailbox.save (err) ->
+              _this.emit 'error', err if err
+              _this.emit 'mailbox:new', mailbox
+              next()
+          , ->
+            callback(null)
 
 Account.prototype.__proto__ = EventEmitter.prototype
 module.exports = Account

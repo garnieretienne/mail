@@ -150,7 +150,7 @@ describe 'Account', ->
             expect(mailbox.id).to.not.equal undefined
             done()
 
-  it 'should fully synchronize the account', (done) ->
+  it 'should fully synchronize the given mailbox', (done) ->
     _this = @
     @account.connect (err) ->
       throw err if err
@@ -163,4 +163,22 @@ describe 'Account', ->
             expect(message.subject).to.not.equal undefined
             expect(message.subject).to.not.be.null
           _this.account.synchronize {type: 'full'}, (err) ->
+            done()
+
+  it 'should subscribe the given mailboxes', (done) ->
+    _this = @
+    @account.setProvider @provider, ->
+      _this.account.connect (err) ->
+        throw err if err
+        _this.account.getIMAPMailboxes (err, mailboxes) ->
+
+          _this.account.on 'error', (err) ->
+            throw err if err
+
+          _this.account.on 'mailbox:new', (mailbox) ->
+            expect(mailbox.id).to.not.equal undefined
+
+          _this.account.subscribe mailboxes, ->
+            for mailbox in mailboxes
+              expect(mailbox.id).to.not.equal undefined
             done()
