@@ -61,29 +61,9 @@ describe 'Association and Sync for Provider and Domain,', ->
                   done()
 
     it 'should retrieve the provider for a given domain', (done) ->
-      Domain.find {name: 'gmail.com'}, (err, results) ->
+      Domain.find {where: {name: 'gmail.com'}}, (err, results) ->
         throw err if err
         gmailDNS = results[results.length-1]
         gmailDNS.getProvider (err, provider) ->
           expect(provider.name).to.equal 'Local Mail'
           done()
-
-    # TODO: parse email address to get the domain name in account
-    
-    # it 'should search for a provider given an email address', (done) ->
-    #   provider = @provider
-    #   provider.save().success ->
-    #     gmailDNS  = new Domain
-    #       name: 'gmail.com'
-    #     googleDNS = new Domain
-    #       name: 'google.com'
-    #     provider.setDomains([gmailDNS, googleDNS])
-    #       .success ->
-    #         Provider.search 'testing@gmail.com', (provider) ->
-    #           expect(provider.name).to.equal 'Local Mail'
-    #           done()
-
-    # it "should search for an unknow provider and tell it didn't found anything", (done) ->
-    #   Provider.search 'test@unknow.com', (provider) ->
-    #     expect(provider).to.be.null
-    #     done()

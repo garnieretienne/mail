@@ -50,7 +50,7 @@ describe 'Mailbox', ->
       done()
 
   it 'should load a mailbox from the database', (done) ->
-    Mailbox.find {name: 'INBOX'}, (err, results) ->
+    Mailbox.find {where: {name: 'INBOX'}}, (err, results) ->
       throw err if err
       mailbox = results[results.length-1]
       expect(mailbox.name).to.equal 'INBOX'

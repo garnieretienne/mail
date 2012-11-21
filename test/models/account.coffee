@@ -47,7 +47,7 @@ describe 'Account', ->
         done()
 
   it 'should load an account from the database whith no unpersistent attributes', (done) ->
-    Account.find {emailAddress: Testing.imapSettings.username}, (err, results) ->
+    Account.find {where: {emailAddress: Testing.imapSettings.username}}, (err, results) ->
       throw err if err
       account = results[results.length-1]
       expect(account).to.be.not.null
@@ -60,7 +60,7 @@ describe 'Account', ->
     _this = @
     domainName = @account.getDomainName()
     expect(domainName).to.equal 'gmail.com'
-    Domain.find {name: 'gmail.com'}, (err, results) ->
+    Domain.find {where: {name: 'gmail.com'}}, (err, results) ->
       throw err if err
       domain = results[results.length-1]
       expect(domain.name).to.equal 'gmail.com'
@@ -76,7 +76,7 @@ describe 'Account', ->
       username: 'nobody@nowhere.com'
       password: 'ohyeah'
     domainName = account.getDomainName()
-    Domain.find {name: domainName}, (err, domains) ->
+    Domain.find {where: {name: domainName}}, (err, domains) ->
       throw err if err
       expect(domains).to.be.empty
       done()

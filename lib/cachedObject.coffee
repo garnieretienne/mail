@@ -158,7 +158,7 @@ class CachedObject
 
   # Find a record from the database and return an object of the extended class.
   # You can spcify an id as integer or an object of criteria.
-  # ex: {name: 'Hello', subname: 'World'} => WHERE "name"="Hello" AND "subname"="World").
+  # ex: {where: {name: 'Hello', subname: 'World'}, limit: 2} => WHERE "name"="Hello" AND "subname"="World" LIMIT 2).
   @find: (attributes, callback) ->
     _this = @
     if typeof(attributes) == 'number'

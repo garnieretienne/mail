@@ -195,7 +195,7 @@ describe 'Message', ->
 
   it 'should load a message from cache', (done) ->
     _this = @
-    Message.find {uid: 111}, (err, results) ->
+    Message.find {where: {uid: 111}}, (err, results) ->
       throw err if err
       message = results[results.length-1]
       expect(message.uid).to.equal 111
