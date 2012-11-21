@@ -221,14 +221,14 @@ class CachedObject
               return _this.save callback
           else
             if !_this.id
-              @insert callback
+              return @insert callback
             else
-              @update callback
+              return @update callback
       else
         if !_this.id
-          @insert callback
+          return @insert callback
         else
-          @update callback
+          return @update callback
 
     else
       return callback(new Error('No cached attributes for this object'))
@@ -241,7 +241,7 @@ class CachedObject
     insertForeignKeyValues = if @foreignKeys then (", #{_this[inflection.camelize(key, true)].id}" for key in @foreignKeys)
     cachedAttributeNames = ("\"#{inflection.underscore(attr)}\"" for attr in @cachedAttributes)
     cachedAttributeValues = ((if typeof(this[attribute]) == 'function' then this[attribute]() else this[attribute]) for attribute in @cachedAttributes)
-    queryString = "INSERT INTO #{tableName}(#{cachedAttributeNames.join(', ')}#{insertForeignKeys}) VALUES(#{("$#{index}" for index in [1..@cachedAttributes.length]).join(', ')}#{insertForeignKeyValues}) RETURNING id"
+    queryString = "INSERT INTO #{tableName}(#{cachedAttributeNames.join(', ')}#{insertForeignKeys.join('')}) VALUES(#{("$#{index}" for index in [1..@cachedAttributes.length]).join(', ')}#{insertForeignKeyValues.join('')}) RETURNING id"
     query = client.query queryString, cachedAttributeValues, (err, result) =>
       return callback(err) if err
       @id = result.rows[0].id
@@ -254,7 +254,7 @@ class CachedObject
     insertForeignKeys = if @foreignKeys then (", #{key}_id" for key in @foreignKeys)
     insertForeignKeyValues = if @foreignKeys then (", #{_this[inflection.camelize(key, true)].id}" for key in @foreignKeys)
     cachedAttributeNames = ("\"#{inflection.underscore(attr)}\"" for attr in @cachedAttributes)  
-    queryString = "UPDATE #{tableName} SET (#{cachedAttributeNames.join(', ')}#{insertForeignKeys}) = (#{("$#{index}" for index in [2..@cachedAttributes.length+1]).join(', ')}#{insertForeignKeyValues}) WHERE id=$1"
+    queryString = "UPDATE #{tableName} SET (#{cachedAttributeNames.join(', ')}#{insertForeignKeys.join('')}) = (#{("$#{index}" for index in [2..@cachedAttributes.length+1]).join(', ')}#{insertForeignKeyValues.join('')}) WHERE id=$1"
     cachedAttributeValues = [_this.id]
     for attribute in @cachedAttributes
       if typeof(this[attribute]) == 'function'
