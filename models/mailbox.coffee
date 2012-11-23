@@ -7,13 +7,8 @@ class Mailbox
 
   setDefaults: ->
     @selectable = true if @selectable == (null || undefined)
-    if @messages
-      @messages.total = 0 if !@messages.total
-      @messages.unread = 0 if !@messages.unread
-    else
-      @messages =
-        total: 0
-        unread: 0
+    @total = 0 if !@total
+    @unread = 0 if !@unread
 
   @convertIMAPMailboxes: (IMAPMailboxes, callback) ->
     mailboxes = []

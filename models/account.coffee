@@ -52,6 +52,8 @@ class Account
         return callback() if callback
 
   # Select a mailbox for futher actions
+  # Update the messages attributes (total / unread)
+  # Record the server uidvalidity
   # TODO: partial sync on select
   # TODO: events
   select: (mailbox, callback) ->
@@ -61,8 +63,9 @@ class Account
     _this = @
     @imap.open mailbox.name, (err, box) ->
       return callback(err) if err
-      mailbox.messages.total  = box.messages.total
-      mailbox.messages.unread = box.messages.unseen
+      mailbox.total             = box.messages.total
+      mailbox.unread            = box.messages.unseen || 0
+      mailbox.serverUidValidity = Number(box.uidvalidity)
       _this.selectedMailbox = mailbox
       return callback(null)
 
@@ -83,7 +86,7 @@ class Account
     _this = @
 
     type        = settings.type || 'partial'
-    maxSeqno    = @selectedMailbox.messages.total
+    maxSeqno    = @selectedMailbox.total
     processed   = 0
     fetchEvents = new EventEmitter()
      

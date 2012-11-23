@@ -17,14 +17,13 @@ describe 'Mailbox', ->
       name:        '[Gmail]'
       uidValidity: 123456789
       selectable:  false
-      messages:
-        total:     3000
-        unread:    20
+      total:     3000
+      unread:    20
     expect(mailbox.name).to.equal '[Gmail]'
     expect(mailbox.uidValidity).to.equal 123456789
     expect(mailbox.selectable).to.equal false
-    expect(mailbox.messages.total).to.equal 3000
-    expect(mailbox.messages.unread).to.equal 20
+    expect(mailbox.total).to.equal 3000
+    expect(mailbox.unread).to.equal 20
 
   it 'should be selectable by default', ->
     mailbox = new Mailbox
@@ -34,16 +33,15 @@ describe 'Mailbox', ->
   it 'should set the messages attributes to 0 by default', ->
     mailbox = new Mailbox
       name: '[Gmail]'
-    expect(mailbox.messages.total).to.equal 0
-    expect(mailbox.messages.unread).to.equal 0
+    expect(mailbox.total).to.equal 0
+    expect(mailbox.unread).to.equal 0
 
   it 'should save the mailbox into database', (done) ->
     inbox = new Mailbox
       name:        'INBOX'
       uidValidity: 123456789
-      messages:
-        total:     3000
-        unread:    20
+      total:     3000
+      unread:    20
     inbox.save (err) ->
       throw err if err
       expect(inbox.id).to.not.equal undefined
