@@ -10,7 +10,6 @@ Mail.Routers.Webmail = Backbone.Router.extend
       el: $('#disconnect')
 
     this.messages = new Mail.Collections.MessageList()
-    this.messages.fetch()
 
   # Home page with the following components
   # - Mailbox list
@@ -21,4 +20,4 @@ Mail.Routers.Webmail = Backbone.Router.extend
     # Message List (thumbs)
     messageListView = new Mail.Views.MessageThumbListView
       collection: this.messages
-    $('#message-list').html messageListView.el
+    $('#message-list').html messageListView.render().el

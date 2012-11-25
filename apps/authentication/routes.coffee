@@ -13,7 +13,7 @@ routes = (app) ->
   # TODO: add flash message with the given error
   app.post '/sessions', (req, res) ->
 
-    # Try to authenticate the user
+    # FUNCTION: Try to authenticate the user.
     authentication = (account, callback) ->
       account.authenticate (err, authenticated) ->
         if authenticated
@@ -24,7 +24,7 @@ routes = (app) ->
         else
           return callback(err)
 
-    # Find the account.
+    # FUNCTION: Find the account.
     # Load the account from the database if its already registered.
     # Create a new one if not registered.
     # Return an error if no provider are found for this email.
@@ -64,26 +64,27 @@ routes = (app) ->
     # Get the account details and try to authenticate.
     # If the authentication is successfull, register the account.
     getAccount (err, account) ->
+
+      # No provider found for this account
       if err
         res.redirect '/login'
         return
       authentication account, (err) ->
+
+        # Bad credentials
         if err
           res.redirect '/login'
           return
+
+        # Register the new account
         if !account.id
           account.save (err) ->
             throw err if err
-            # TODO: replace the following by displaying the subscribe mailbox chooser
-            # -----------------------------------------------------------------------
-            mailbox = new Mailbox
-              name: 'INBOX'
-            mailbox.setAccount account, ->
-              mailbox.save (err) ->
-                throw err if err
-                res.redirect '/mail'
-                return
-            # -----------------------------------------------------------------------
+            req.session.currentUserId = account.id
+            res.redirect '/mail'
+            return
+
+        # Or display the mail interface
         else
           res.redirect '/mail'
           return

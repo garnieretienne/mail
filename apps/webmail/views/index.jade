@@ -64,12 +64,21 @@ block javascript
   script(src='/socket.io/socket.io.js')
 
   script(type='text/javascript')
+
     // Init backbone app
     var webmailRouter = new Mail.Routers.Webmail();
     Backbone.history.start();
 
     // Init socket.io    
     var socket = io.connect('/');
+
+    // Events 
+    // TODO: store elsewhere
+    socket.on('message:all', function (messages) {
+      console.log(messages.length);
+      webmailRouter.messages.reset(messages);
+    });
     socket.on('message:new', function (message) {
       webmailRouter.messages.add(message);
     });
+

@@ -18,46 +18,99 @@ routes = (app, io) ->
 
   app.get '/mail', (req, res) ->
 
-    account = new Account
-      username: req.session.currentUser
-      password: req.session.password
-
-      # Events
-      # account.on 'message:new', (message) ->
-      #   io.sockets.emit "message:new", message
-
-      # Get the account provider informations
-      # domainName = account.getDomainName()
-      # Domain.find {name: domainName}, (err, results) ->
-      #   throw err if err
-      #   if results[0]
-      #     domain = results[0]
-      #     domain.getProvider (err, provider) ->
-      #       throw err if err
-      #       account.setProvider provider, ->
-
-      #         # Connect to the IMAP server
-      #         account.connect (err) ->
-      #           throw err if err
-
-      #           account.getIMAPMailboxes (err, IMAPMailboxes) ->
-      #             Mailbox.convertIMAPMailboxes IMAPMailboxes, (mailboxes) ->
-      #               inbox
-      #               for mailbox in mailboxes
-      #                 inbox  = mailbox if mailbox.name = 'INBOX'
-
-      #               inbox.setAccount account, ->
-
-      #                 # Open the INBOX
-      #                 account.select inbox, (err, mailbox) ->
-      #                   throw err if err
-
-      #                   # Synchronize the INBOX
-      #                   account.synchronize {type: 'full'}, (err) ->
-      #                     throw err if err
-
     res.render "#{__dirname}/views/index",
       title: 'Mail'
       user: req.session.currentUser
+    , (err, html) ->
+      throw err if err
+      res.send html
+
+      connections = []
+      io.sockets.on 'connection', (socket) ->
+
+        # Temporary fix a bug with deplicated events
+        # https://github.com/LearnBoost/socket.io/issues/430
+        connections.push socket.id
+        if connections.length > 1
+          return
+
+        getInbox = (account, callback) ->
+          Mailbox.find {where: {name: 'INBOX', account_id: account.id}, limit: 1}, (err, mailbox) ->
+            throw err if err
+            mailbox = mailbox[0]
+            if !mailbox
+              err = new Error 'No INBOX subscribed'
+              return callback(err, null)
+            else
+              return callback(null, mailbox)
+
+        getMailboxes = (account, callback) ->
+          account.getMailboxes (err, mailboxes) ->
+            throw err if err
+            
+            # If no mailboxes had been subscribed yet, 
+            # display the mailbox subscriber screen.
+            if mailboxes.length == 0
+              account.getIMAPMailboxes (err, mailboxes) ->
+                throw err if err
+
+                # Subscribe to all account mailbox.
+                # TODO: let user decide which mailboxes he wants to subscribe.
+                account.subscribe mailboxes, (err) ->
+                  throw err if err
+
+                  return callback(mailboxes)
+            else
+              return callback(mailboxes)
+
+        Account.find req.session.currentUserId, (err, account) ->
+          throw err if err
+          account.username = req.session.currentUser
+          account.password = req.session.password
+
+          # Events
+          # ------
+          # When a new mailbox is subscribed, 
+          # tell it to backbone.
+          account.on 'mailbox:new', (mailbox) ->
+            #io.sockets.emit "mailbox:new", mailbox # /!\ circular (parent child)
+          # When a new message is discovered,
+          # tell it to backbone.
+          account.on 'message:new', (message) ->
+            socket.emit "message:new", message
+
+          account.connect (err) ->
+            throw err if err
+
+            # Disconnect the IMAP connection when the WebSocket connection is disconnected
+            socket.on 'disconnect', ->
+              account.disconnect()
+
+            getMailboxes account, (mailboxes) ->
+              
+              getInbox account, (err, inbox) ->
+                throw err if err
+
+                account.select inbox, (err) ->
+                  throw err if err
+
+                  # Get cached messages and render the UI
+                  inbox.getMessages (err, messages) ->
+                    throw err if err
+                    
+                    # Synchronization
+                    if inbox.uidValidity != inbox.serverUidValidity
+                        account.synchronize {type: 'full'}, (err) ->
+                          throw err if err
+                          inbox.uidValidity = inbox.serverUidValidity
+                          inbox.save (err) ->
+                            throw err if err
+                    else
+                      # TODO: partial sync
+                      # account.synchronize {type: 'partial'}, (err) ->
+                      #   throw err if err
+                      #   socket.emit "message:all", messages
+                      socket.emit "message:all", messages
+
 
 module.exports = routes
