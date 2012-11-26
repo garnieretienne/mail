@@ -200,6 +200,15 @@ class CachedObject
     else
       return callback(new Error('Cannot search in the database using these attributes'), null)
 
+  # Should generate a JSON compatible object.
+  # Take retuned attributes array as argument.
+  toJSONQuery: (whiteList) ->
+    data = new Object()
+    for key of @
+      if (whiteList.indexOf(key) != -1)
+        data[key] = this[key]
+    return data
+
   # Save an object into the database.
   # If the object is a new record, it will be created and an id attribute will be added to the object.
   # If the object is already in the database and has an id, it will update the existing record

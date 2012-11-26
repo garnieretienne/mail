@@ -130,6 +130,16 @@ describe 'Cached Objects >', ->
               expect(cachedObjects2.length).to.equal 1
               done()
 
+    it 'should return a JSON compatible object', ->
+      object         = new CachedObject()
+      object.name    = 'The Name'
+      object.goal    = 'Find the answer to the universe'
+      object.reality = 'should not be returned'
+      json = object.toJSONQuery(['name', 'goal'])
+      expect(json.name).to.equal object.name
+      expect(json.goal).to.equal object.goal
+      expect(json.reality).to.equal undefined
+
 
   describe 'Object inherited from Cached Object >', ->
 

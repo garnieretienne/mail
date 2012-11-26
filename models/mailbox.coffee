@@ -11,15 +11,8 @@ class Mailbox
     @unread = 0 if !@unread
 
   # Convert a mailbox object into JSON without circular references
-  # TODO: Make a toJSONQuery function for CachedObjects to generate this function
-  #       ex: toJSONQuery(['id', 'name', 'selectable', 'total', 'unread'])
   toJSON: ->
-    whiteList = ['id', 'name', 'selectable', 'total', 'unread']
-    data = new Object()
-    for key of @
-      if (whiteList.indexOf(key) != -1)
-        data[key] = this[key]
-    return data
+    return @toJSONQuery(['id', 'name', 'selectable', 'total', 'unread'])
 
   @convertIMAPMailboxes: (IMAPMailboxes, callback) ->
     mailboxes = []
