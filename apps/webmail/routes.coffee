@@ -73,7 +73,7 @@ routes = (app, io) ->
           # When a new mailbox is subscribed, 
           # tell it to backbone.
           account.on 'mailbox:new', (mailbox) ->
-            #io.sockets.emit "mailbox:new", mailbox # /!\ circular (parent child)
+            socket.emit "mailbox:new", mailbox
           # When a new message is discovered,
           # tell it to backbone.
           account.on 'message:new', (message) ->
@@ -111,6 +111,7 @@ routes = (app, io) ->
                       #   throw err if err
                       #   socket.emit "message:all", messages
                       socket.emit "message:all", messages
+                      socket.emit "mailbox:all", mailboxes
 
 
 module.exports = routes
