@@ -239,6 +239,7 @@ class CachedObject
               return callback(err) if err
               return _this.save callback
           else
+            _this[foreignKey+'Id'] = _this[foreignKey].id
             if !_this.id
               return @insert callback
             else

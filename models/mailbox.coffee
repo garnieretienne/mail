@@ -10,10 +10,6 @@ class Mailbox
     @total = 0 if !@total
     @unread = 0 if !@unread
 
-  # Convert a mailbox object into JSON without circular references
-  toJSON: ->
-    return @toJSONQuery(['id', 'name', 'selectable', 'total', 'unread'])
-
   @convertIMAPMailboxes: (IMAPMailboxes, callback) ->
     mailboxes = []
     for key of IMAPMailboxes
@@ -29,5 +25,9 @@ class Mailbox
           childMailbox.setMailbox mailbox, ->
             mailboxes.push childMailbox
     return callback(mailboxes)
+
+  # Convert a mailbox object into JSON without circular references
+  toJSON: ->
+    return @toJSONQuery(['id', 'name', 'selectable', 'total', 'unread', 'mailboxId'])
 
 module.exports = Mailbox

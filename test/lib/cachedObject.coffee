@@ -199,6 +199,7 @@ describe 'Cached Objects >', ->
             expect(object1.id).to.not.equal undefined
             expect(object2.customClass.id).to.not.equal undefined
             expect(object2.id).to.not.equal undefined
+            expect(object2.customClassId).to.equal object2.customClass.id
             AnotherClass.find object2.id, (err, savedObject) ->
               expect(savedObject.customClass).to.equal undefined
               savedObject.getCustomClass (err, customObject) ->
