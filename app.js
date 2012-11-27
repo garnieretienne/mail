@@ -57,7 +57,6 @@ var io = socketIO.listen(server);
 // Routes
 require('./apps/authentication/routes')(app);
 require('./apps/webmail/routes')(app, io);
-require('./apps/api/routes')(app);
 
 // App
 server.listen(app.get('port'), function(){

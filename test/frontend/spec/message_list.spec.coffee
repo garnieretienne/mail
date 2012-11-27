@@ -1,6 +1,11 @@
 describe 'Mail.Collections.MessageList', ->
-  
-  it 'should possibly fetch using the good url', ->
-    messages = new Mail.Collections.MessageList messageData
-    expect(messages.url).toBe '/messages'
+
+  it 'should create a new message list and get correctly each elements', ->
+    messageArray = []
+    for messageAttr in messageData
+      message = new Mail.Models.Message messageAttr
+      messageArray.push message
+    messages = new Mail.Collections.MessageList messageArray
+    messages.forEach (message) ->
+      expect(message.get('subject')).toNotBe undefined
     

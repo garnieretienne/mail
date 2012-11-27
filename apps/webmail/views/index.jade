@@ -20,15 +20,8 @@ block content
             button.btn.btn-block.btn-primary 
               i.icon-envelope.icon-white
               |  New Message
+          h4 Mailboxes
           #mailbox-list
-            h4 Mailboxes
-            ul
-              li.inbox.current
-                i.icon-inbox.icon-white
-                | Inbox (2)
-              li 
-                i.icon-folder-close.icon-white
-                | Sent
 
       .span3.max-height
         #message-list
@@ -81,9 +74,9 @@ block javascript
       webmailRouter.messages.add(message);
     });
     socket.on('mailbox:all', function (mailboxes) {
-      //webmailRouter.mailboxes.reset(mailboxes);
+      webmailRouter.mailboxes.reset(mailboxes);
     });
     socket.on('mailbox:new', function (mailbox) {
-      //webmailRouter.mailboxes.add(mailbox);
+      webmailRouter.mailboxes.add(mailbox);
     });
 

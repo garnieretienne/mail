@@ -18,4 +18,4 @@ describe 'Mail.Views.MessageThumbView', ->
     view = new Mail.Views.MessageThumbView
       model: msg
     $rendered = view.render().$el
-    expect($rendered.attr('class')).toMatch /unread/    
+    expect($rendered.attr('class')).toMatch /unread/
