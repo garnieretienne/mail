@@ -124,14 +124,13 @@ describe 'Account', ->
       throw err if err
       _this.account.getIMAPMailboxes (err, mailboxes) ->
         thow err if err
-        expect(mailboxes[0].name).to.equal 'Trash'
+        expect(mailboxes[0].name).to.equal 'Work'
         expect(mailboxes[0].selectable).to.be.true
-        expect(mailboxes[1].name).to.equal 'Parent'
+        expect(mailboxes[1].name).to.equal 'Receipts'
         expect(mailboxes[1].selectable).to.be.true
-        expect(mailboxes[2].name).to.equal 'Children'
-        expect(mailboxes[2].selectable).to.be.true
-        expect(mailboxes[2].mailbox.name).to.equal 'Parent'
-        expect(mailboxes[3].name).to.equal 'INBOX'
+        expect(mailboxes[2].name).to.equal '[Gmail]'
+        expect(mailboxes[2].selectable).to.be.false
+        expect(mailboxes[3].name).to.equal 'Trash'
         expect(mailboxes[3].selectable).to.be.true
         done()
 
