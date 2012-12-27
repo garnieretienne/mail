@@ -58,6 +58,18 @@ describe 'Cached Objects >', ->
         Testing.resetDatabase 'mailbox_tests', ->
           done()
 
+  describe 'SQL Query', ->
+
+    it 'should execute a SQL query and return the result', (done) ->
+      CachedObject.sql 'SELECT COUNT(*) FROM cached_objects', (err, results) ->
+        throw err if err
+        expect(results.rows[0].count).to.not.equal undefined
+        cachedObject = new CachedObject()
+        cachedObject.sql 'SELECT COUNT(*) FROM cached_objects', (err, results) ->
+          throw err if err
+          expect(results.rows[0].count).to.not.equal undefined
+          done()
+
   describe 'Pure Cached Object >', ->
 
     it 'should create a cached object', ->

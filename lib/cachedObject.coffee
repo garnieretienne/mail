@@ -145,6 +145,33 @@ class CachedObject
         else 
           return callback(null, null)
 
+  # Execute a SQL query and return a callback with error (if any) and result.
+  # Can be called using constructor name or object name.
+  # ex: Model.sql 'SELECT * FROM model_name', (err, results) ->
+  #     modelObject.sql 'SELECT * FROM model_name', (err, results) ->
+  sql: (query, attributes, callback) ->
+    return CachedObject.sql(query, attributes, callback)
+  @sql: (query, attributes, callback) ->
+    attributes ||= null
+    callback   ||= null
+    if arguments.length == 1
+      query      = arguments[0]
+      callback   = ->
+      attributes = null
+    else if arguments.length == 2
+      query      = arguments[0]
+      callback   = arguments[1]
+      attributes = null
+    else if arguments.length == 3
+      query      = arguments[0]
+      attributes = arguments[1]
+      callback   = arguments[2]
+    query = client.query query,
+      attributes,
+      (err, result) ->
+        return callback(err, null) if err
+        return callback(null, result)
+
   # (Internal method) build a new object from a model and a list of attributes,
   # used by find after getting attributes from databases.
   # Support for JSON storage: if json attribute is given (loaded from database), 

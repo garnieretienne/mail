@@ -77,7 +77,7 @@ class Account
   #  - error: append when an error append on message fetch
   #  - end  : append when the synchronization is done
   # TODO: full, partial (new + old), new, old
-  # TODO: save uidvalidity
+  # TODO: synchronize local change with the server
   synchronize: (settings, callback) ->
     if !@selectedMailbox
       err = new Error 'No selected mailbox'
@@ -85,21 +85,46 @@ class Account
 
     _this = @
 
-    type        = settings.type || 'partial'
-    maxSeqno    = @selectedMailbox.total
-    processed   = 0
-    fetchEvents = new EventEmitter()
-     
-    # Segment the fetch
-    messagePerRange = 10
-    rangeNumber     = Math.floor(maxSeqno / messagePerRange)
+    type            = settings.type || 'partial'
+    maxSeqno        = @selectedMailbox.total
+    processed       = 0
+    fetchEvents     = new EventEmitter()
     ranges          = []
-    index           = 1
-    if maxSeqno > messagePerRange
-      for i in [1..rangeNumber]
-        ranges.push "#{index}:#{messagePerRange*i}"
-        index = (messagePerRange*i) + 1
-    ranges.unshift "#{index}:*"
+    messagePerRange = 10
+
+    # Check UID validity, if different, need a full synchronization
+    if type == 'partial' && @selectedMailbox.uidValidity != @selectedMailbox.serverUidValidity
+      type = 'full'
+
+    # Full synchronization
+    if type == 'full'
+     
+      # Segment the fetch
+      rangeNumber     = Math.floor(maxSeqno / messagePerRange)
+      index           = 1
+      if maxSeqno > messagePerRange
+        for i in [1..rangeNumber]
+          ranges.push "#{index}:#{messagePerRange*i}"
+          index = (messagePerRange*i) + 1
+      ranges.unshift "#{index}:*"
+
+    # Partial synchronization
+    else
+      # TODO: GET client to be able to execute row SQL query
+      # => Build a sql method
+      _this.sql "SELECT MAX(uid) FROM messages WHERE mailbox_id=$1", [_this.selectedMailbox.id], (err, result) ->
+        throw err if err
+        lastSeenUid = result.rows[0].max
+        
+        # Fetch new messages
+        range = "#{lastSeenUid}:*"
+        _this.imap.fetchHeaders range
+
+
+      # Segment the fetch
+
+      
+
   
     # Fetch and cache the headers using range
     # When a message is fetched, 
@@ -124,7 +149,13 @@ class Account
       _this.imap.fetchHeaders range
 
     fetchEvents.on 'end', ->
-      return callback(null)
+
+      # Save the UID validity
+      if type == 'full'
+        _this.selectedMailbox.uidValidity = _this.selectedMailbox.serverUidValidity
+        _this.selectedMailbox.save (err) ->
+          throw err if err
+          return callback(null)
 
   # List the mailboxes from the IMAP server
   getIMAPMailboxes: (callback) ->

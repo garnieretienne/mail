@@ -99,6 +99,7 @@ routes = (app, io) ->
                     throw err if err
                     
                     # Synchronization
+                    # TODO: let account model take care of uid validity
                     if inbox.uidValidity != inbox.serverUidValidity
                         account.synchronize {type: 'full'}, (err) ->
                           throw err if err

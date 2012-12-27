@@ -164,6 +164,21 @@ describe 'Account', ->
           _this.account.synchronize {type: 'full'}, (err) ->
             done()
 
+  it 'should partially synchronize the given mailbox', (done) ->
+    _this = @
+    @account.connect (err) ->
+      throw err if err
+      _this.account.getMailboxes (err, mailboxes) ->
+        throw err if err
+        inbox = mailboxes[0]
+        _this.account.select inbox, (err) ->
+          throw err if err
+          _this.account.on 'message:new', (message) ->
+            expect(message.subject).to.not.equal undefined
+            expect(message.subject).to.not.be.null
+          _this.account.synchronize {type: 'partial'}, (err) ->
+            done()
+
   it 'should subscribe the given mailboxes', (done) ->
     _this = @
     @account.setProvider @provider, ->
