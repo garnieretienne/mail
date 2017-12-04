@@ -85,7 +85,7 @@ To add spec files, add coffee-script files into 'test/frontend/spec' and edit th
 Express
 -------
 
-* Mocha: http://visionmedia.github.com/mocha/
+* Mocha: http://mochajs.org/
 * Chai: http://chaijs.com/
 * Cheerio: https://github.com/MatthewMueller/cheerio#readme
 
