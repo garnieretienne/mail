@@ -72,7 +72,7 @@ Testing
 Backbone
 --------
 
-* Jasmine: http://pivotal.github.com/jasmine/
+* Jasmine: https://jasmine.github.io/
 
 Jasmine 1.2.0 is installed manually (no auto-update).
 
